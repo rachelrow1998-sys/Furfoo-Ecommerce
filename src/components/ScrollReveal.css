@@ -1,0 +1,35 @@
+.scroll-reveal {
+  margin: 20px 0;
+}
+
+.scroll-reveal-text {
+  display: block;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.scroll-reveal .word {
+  display: inline-block;
+}
+
+.story-scroll-reveal {
+  margin: 0;
+}
+
+.story-scroll-reveal .scroll-reveal-text {
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+}
+
+.section-scroll-reveal {
+  margin: 0;
+}
+
+.section-scroll-reveal .scroll-reveal-text {
+  font: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+}
