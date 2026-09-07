@@ -1,0 +1,285 @@
+.sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+.hachi-root {
+  --hachi-red: #ef290f;
+  --hachi-cream: #fff9ed;
+  --hachi-ink: #34251f;
+  --hachi-muted: #776961;
+  position: fixed;
+  z-index: 84;
+  right: max(24px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: 132px;
+  height: 142px;
+  pointer-events: none;
+  color: var(--hachi-ink);
+  font-family: var(--font-body);
+}
+.hachi-root.is-hero-hidden { opacity: 0; pointer-events: none; visibility: hidden; }
+
+.hachi-root button, .hachi-root a, .hachi-root input { font: inherit; }
+.hachi-root button:focus-visible, .hachi-root a:focus-visible, .hachi-root input:focus-visible { outline: 3px solid #2685a0; outline-offset: 3px; }
+.hachi-trigger { position: absolute; right: 0; bottom: 0; width: 126px; height: 148px; padding: 0; border: 0; background: transparent; pointer-events: auto; filter: drop-shadow(0 14px 18px rgba(52,37,31,.24)); transition: transform .28s cubic-bezier(.2,.8,.2,1), filter .25s ease; animation: hachi-float 4.6s ease-in-out infinite; }
+.hachi-trigger:hover { transform: translateY(-8px) rotate(2deg); filter: drop-shadow(0 18px 22px rgba(52,37,31,.28)); }
+.hachi-trigger img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+.hachi-trigger__badge { position: absolute; left: -2px; top: 7px; min-height: 31px; padding: 6px 10px; display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; border: 2px solid var(--hachi-cream); background: var(--hachi-red); color: #fff; box-shadow: 0 8px 18px rgba(104,36,25,.25); font: 700 11px var(--font-display); white-space: nowrap; }
+.hachi-trigger__badge svg { width: 13px; height: 13px; }
+.hachi-trigger__fallback { width: 104px; height: 104px; margin: 26px auto 0; display: grid; place-items: center; align-content: center; border: 3px solid #fff; border-radius: 50%; background: var(--hachi-cream); box-shadow: inset 0 0 0 2px rgba(52,37,31,.1); }
+.hachi-trigger__fallback svg { width: 28px; color: var(--hachi-red); }
+.hachi-trigger__fallback b { font: 700 16px var(--font-display); }
+.hachi-trigger__fallback small { font-size: 8px; text-transform: uppercase; letter-spacing: .1em; }
+.hachi-root.is-sleeping .hachi-trigger { animation: none; transform: translateY(20px); filter: saturate(.7) drop-shadow(0 10px 14px rgba(52,37,31,.18)); }
+.hachi-root.is-hovered .hachi-trigger img { transform: rotate(2deg); }
+.hachi-root.is-panel-open .hachi-trigger { transform: translateY(14px) scale(.92); animation: none; }
+
+.hachi-popover { position: absolute; right: 38px; bottom: 118px; width: min(322px, calc(100vw - 40px)); padding: 22px; border: 1px solid rgba(52,37,31,.13); border-radius: 24px 24px 7px 24px; background: var(--hachi-cream); box-shadow: 0 18px 55px rgba(52,37,31,.18); pointer-events: auto; animation: hachi-pop .35s cubic-bezier(.2,.85,.25,1) both; }
+.hachi-popover::after { content: ''; position: absolute; right: -1px; bottom: -13px; width: 24px; height: 24px; background: var(--hachi-cream); clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.hachi-popover strong { display: block; padding-right: 24px; font: 700 20px/1.15 var(--font-display); letter-spacing: -.02em; }
+.hachi-popover p { margin: 9px 0 16px; color: var(--hachi-muted); font-size: 14px; line-height: 1.45; }
+.hachi-popover > div { display: flex; gap: 8px; }
+.hachi-popover > div button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--hachi-red); color: #fff; font-weight: 700; }
+.hachi-popover > div button:last-child { background: #eee3d2; color: var(--hachi-ink); }
+.hachi-popover__dismiss { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; display: grid; place-items: center; padding: 0 !important; border: 1px solid rgba(52,37,31,.08); border-radius: 50%; background: rgba(255,255,255,.34) !important; color: var(--hachi-ink) !important; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+.hachi-popover__dismiss svg { width: 16px; }
+.hachi-popover__dismiss:hover { border-color: rgba(52,37,31,.16); background: rgba(255,255,255,.72) !important; }
+.hachi-popover__dismiss:active { transform: scale(.95); }
+.hachi-popover button:focus-visible { outline: 3px solid #2685a0; outline-offset: 2px; }
+.hachi-popover.is-settings { padding-top: 14px; }
+.hachi-settings-heading { display: flex !important; align-items: center; gap: 10px !important; }
+.hachi-settings-heading strong { min-width: 0; padding-right: 0; }
+.hachi-popover .hachi-settings-back { width: 48px; min-width: 48px; height: 48px; display: inline-grid; flex: 0 0 auto; padding: 0; border: 0; background: var(--furfoo-red); color: var(--furfoo-white); }
+.hachi-settings-back svg { width: 40px; height: 40px; stroke-width: 6; }
+.hachi-settings-back:hover { background: var(--furfoo-red-hover); }
+
+.hachi-panel { --hachi-red: #ef290f; --hachi-cream: #fff9ed; --hachi-ink: #34251f; --hachi-muted: #776961; position: fixed; z-index: 120; right: 20px; top: 124px; width: min(400px, calc(100vw - 32px)); height: min(680px, calc(100svh - 128px)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; border: 1px solid rgba(52,37,31,.14); border-radius: 31px; background: var(--hachi-cream); color: var(--hachi-ink); box-shadow: 0 26px 80px rgba(52,37,31,.25); pointer-events: auto; font-family: var(--font-body); transform-origin: center; animation: hachi-panel-in .3s cubic-bezier(.2,.85,.25,1) both; }
+.hachi-panel button, .hachi-panel a, .hachi-panel input { font: inherit; }
+.hachi-panel button:focus-visible, .hachi-panel a:focus-visible, .hachi-panel input:focus-visible { outline: 3px solid #2685a0; outline-offset: 3px; }
+.hachi-panel.is-moving { user-select: none; box-shadow: 0 34px 90px rgba(52,37,31,.34); }
+.hachi-panel__header { position: relative; display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 11px; align-items: center; padding: 23px 13px 14px 16px; border-bottom: 1px solid rgba(52,37,31,.1); background: #fffdf7; }
+.hachi-panel__drag-handle { position: absolute; z-index: 2; left: 50%; top: 2px; width: 74px; height: 22px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 0 0 12px 12px; background: #ece2d4; color: var(--hachi-muted); cursor: grab; touch-action: none; transform: translateX(-50%); }
+.hachi-panel__drag-handle:hover { background: #ded0bd; color: var(--hachi-ink); }
+.hachi-panel__drag-handle:active, .hachi-panel.is-moving .hachi-panel__drag-handle { cursor: grabbing; }
+.hachi-panel__drag-handle svg { width: 25px; height: 16px; }
+.hachi-header-avatar { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 15px; background: var(--hachi-red); color: white; transform: rotate(-3deg); }
+.hachi-header-avatar svg { width: 23px; }
+.hachi-panel__header h2 { margin: 0; font: 700 23px/.95 var(--font-display); letter-spacing: -.035em; }
+.hachi-panel__header p { margin: 3px 0 2px; color: var(--hachi-muted); font-size: 11px; }
+.hachi-panel__header span { display: inline-flex; align-items: center; gap: 5px; color: #4f6944; font-size: 10px; font-weight: 700; }
+.hachi-panel__header span i { width: 7px; height: 7px; border-radius: 50%; background: #58a647; box-shadow: 0 0 0 3px rgba(88,166,71,.13); }
+.hachi-header-actions { display: grid; grid-template-columns: repeat(2, 44px); gap: 3px; }
+.hachi-header-actions button { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--hachi-ink); }
+.hachi-header-actions button:hover { background: #f1e8d9; }
+.hachi-header-actions svg { width: 17px; }
+
+.hachi-panel__messages { min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; padding: 20px; scrollbar-color: rgba(52,37,31,.25) transparent; }
+.hachi-back { min-height: 40px; display: inline-flex; align-items: center; gap: 7px; margin: -6px 0 13px; padding: 0 9px; border: 0; background: transparent; color: var(--hachi-muted); font-size: 12px; font-weight: 700; }
+.hachi-back svg { width: 15px; }
+.hachi-message { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; margin-bottom: 14px; }
+.hachi-message > svg { width: 34px; height: 34px; padding: 8px; border-radius: 11px; background: #f5bd3d; }
+.hachi-message > div { padding: 14px 15px; border-radius: 6px 18px 18px 18px; background: #fff; box-shadow: 0 8px 25px rgba(52,37,31,.08); }
+.hachi-message strong { display: block; font: 700 17px/1.2 var(--font-display); letter-spacing: -.015em; }
+.hachi-message p { margin: 7px 0 0; color: var(--hachi-muted); font-size: 13px; line-height: 1.5; }
+.hachi-message.is-warning > svg { background: #f4b66f; }
+.hachi-message.is-urgent > svg { background: var(--hachi-red); color: white; }
+.hachi-message.is-urgent > div { border: 1px solid rgba(239,41,15,.35); }
+.hachi-message.is-success > svg { background: #a9d17a; }
+
+.hachi-quick-replies { display: grid; gap: 8px; }
+.hachi-quick-button { width: 100%; min-height: 50px; display: grid; grid-template-columns: 23px minmax(0, 1fr) 18px; gap: 9px; align-items: center; padding: 10px 12px; border: 1px solid rgba(52,37,31,.12); border-radius: 16px; background: #fffdf7; color: var(--hachi-ink); text-align: left; font-size: 13px; font-weight: 700; transition: transform .18s ease, border-color .18s ease, background .18s ease; }
+.hachi-quick-button:hover { transform: translateX(3px); border-color: rgba(239,41,15,.45); background: #fff; }
+.hachi-quick-button > svg { width: 18px; color: var(--hachi-red); }
+.hachi-quick-button > svg:last-child { width: 15px; justify-self: end; color: var(--hachi-muted); }
+.hachi-quick-button:not(:has(> svg:first-child)) { grid-template-columns: minmax(0,1fr) 18px; }
+
+.hachi-action { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 9px; padding: 10px 14px; border: 0; border-radius: 15px; background: var(--hachi-red); color: #fff; font-size: 13px; font-weight: 700; text-align: center; }
+.hachi-action svg { width: 18px; }
+.hachi-action--secondary { border: 1px solid rgba(52,37,31,.15); background: #fff; color: var(--hachi-ink); }
+.hachi-action--whatsapp { background: #1f8f58; }
+.hachi-safety { display: flex; align-items: flex-start; gap: 8px; margin: 14px 2px 0; padding-top: 12px; border-top: 1px solid rgba(52,37,31,.12); color: var(--hachi-muted); font-size: 10px; line-height: 1.45; }
+.hachi-safety svg { width: 15px; flex: 0 0 auto; }
+
+.hachi-product-card, .hachi-adoption-card { overflow: hidden; margin: 12px 0; border: 1px solid rgba(52,37,31,.12); border-radius: 22px; background: #fff; box-shadow: 0 8px 25px rgba(52,37,31,.07); }
+.hachi-product-card > img { width: 100%; height: 145px; object-fit: cover; }
+.hachi-product-card__copy { padding: 15px; }
+.hachi-card-title-row { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+.hachi-card-title-row h4 { margin: 0; font: 700 19px/1.08 var(--font-display); }
+.hachi-card-title-row span { flex: 0 0 auto; padding: 5px 7px; border-radius: 999px; background: #dfeecf; color: #446533; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.is-unavailable .hachi-card-title-row span { background: #eee4d5; color: #76685d; }
+.hachi-product-card p, .hachi-adoption-card p { margin: 8px 0; color: var(--hachi-muted); font-size: 12px; line-height: 1.45; }
+.hachi-product-card small { display: block; margin-top: 6px; color: var(--hachi-muted); line-height: 1.4; }
+.hachi-card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 13px; }
+.hachi-card-actions button, .hachi-adoption-card button { min-height: 44px; padding: 8px; border: 1px solid rgba(52,37,31,.15); border-radius: 12px; background: #fff; color: var(--hachi-ink); font-size: 11px; font-weight: 700; }
+.hachi-card-actions .hachi-action { grid-column: 1 / -1; margin: 0; border-radius: 12px; }
+.hachi-card-list { display: grid; gap: 12px; }
+.hachi-adoption-card { display: grid; grid-template-columns: 106px 1fr; margin: 0; }
+.hachi-adoption-card > img { width: 100%; height: 100%; min-height: 175px; object-fit: cover; }
+.hachi-adoption-card > div { padding: 12px; }
+.hachi-adoption-card button, .hachi-adoption-card .hachi-action { width: 100%; margin-top: 6px; min-height: 44px; border-radius: 11px; font-size: 10px; }
+.hachi-adoption-detail > img { width: 100%; height: 210px; object-fit: cover; border-radius: 20px; }
+.hachi-adoption-detail h3 { margin: 18px 0 7px; font-size: 31px; }
+.hachi-adoption-detail > p { color: var(--hachi-muted); font-size: 13px; line-height: 1.5; }
+.hachi-adoption-detail dl { margin: 15px 0; }
+.hachi-adoption-detail dl > div { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid rgba(52,37,31,.1); font-size: 11px; }
+.hachi-adoption-detail dt { color: var(--hachi-muted); }.hachi-adoption-detail dd { margin: 0; font-weight: 700; }
+
+.hachi-input { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 8px; padding: 12px 14px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid rgba(52,37,31,.1); background: #fffdf7; }
+.hachi-input input { width: 100%; min-height: 46px; padding: 0 15px; border: 1px solid rgba(52,37,31,.16); border-radius: 14px; background: #fff; color: var(--hachi-ink); font-size: 13px; }
+.hachi-input button { width: 46px; height: 46px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 14px; background: var(--hachi-red); color: #fff; }
+.hachi-input svg { width: 18px; }
+
+@keyframes hachi-float { 0%,100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+@keyframes hachi-pop { from { opacity: 0; transform: translateY(10px) scale(.95); } to { opacity: 1; transform: none; } }
+@keyframes hachi-panel-in { from { opacity: 0; transform: translateY(18px) scale(.94); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 700px) {
+  .hachi-root { right: max(10px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); width: 96px; height: 108px; }
+  .hachi-trigger { width: 92px; height: 112px; bottom: 0; }
+  .hachi-trigger__badge { top: 4px; left: -10px; font-size: 9px; padding: 5px 8px; }
+  .hachi-popover { position: fixed; left: 12px; right: 12px; bottom: calc(86px + env(safe-area-inset-bottom)); width: auto; border-radius: 22px 22px 7px 22px; }
+  .hachi-panel { position: fixed; inset: auto 6px 0 6px; width: auto; height: min(82svh, 720px); max-height: calc(100svh - 12px); border-radius: 28px 28px 0 0; }
+  .hachi-root.is-panel-open .hachi-trigger { opacity: 0; pointer-events: none; transform: translateY(18px) scale(.88); }
+  .hachi-panel__header { padding-top: 13px; }
+  .hachi-panel__messages { padding: 17px; }
+  .hachi-header-actions { grid-template-columns: repeat(2, 44px); }
+  .hachi-adoption-card { grid-template-columns: 92px 1fr; }
+  .hachi-product-card > img { height: 135px; }
+}
+
+@media (max-width: 370px) {
+  .hachi-panel__header { grid-template-columns: 42px minmax(0, 1fr) 88px; gap: 7px; padding-inline: 10px; }
+  .hachi-header-avatar { width: 41px; height: 41px; }
+  .hachi-panel__header h2 { font-size: 20px; }
+  .hachi-panel__header p { font-size: 9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hachi-trigger, .hachi-popover, .hachi-panel { animation: none !important; transition: opacity .01ms linear !important; }
+  .hachi-trigger:hover, .hachi-root.is-panel-open .hachi-trigger, .hachi-root.is-sleeping .hachi-trigger { transform: none; }
+  .hachi-quick-button:hover { transform: none; }
+}
+
+/* Living Hachi world layer -------------------------------------------------
+   The character moves with GSAP on this fixed world node. Layout properties
+   stay stable while x/y are expressed as translate3d transforms. */
+.hachi-root {
+  left: 0;
+  top: 0;
+  right: auto;
+  bottom: auto;
+  will-change: transform;
+  contain: layout style;
+}
+.hachi-renderer { width: 100%; height: 100%; display: block; transform-origin: 50% 88%; transition: filter .2s ease; }
+.hachi-renderer__asset { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; user-select: none; pointer-events: none; }
+.hachi-renderer__sprite { width: 100%; height: 100%; display: block; background-repeat: no-repeat; background-size: 300% 200%; background-position: 0 0; user-select: none; pointer-events: none; }
+.hachi-renderer__sprite[data-pose="happy"] { background-position: 0 0; }
+.hachi-renderer__sprite[data-pose="tilt"] { background-position: 50% 0; }
+.hachi-renderer__sprite[data-pose="sniff"] { background-position: 100% 0; }
+.hachi-renderer__sprite[data-pose="surprised"] { background-position: 0 100%; }
+.hachi-renderer__sprite[data-pose="thinking"] { background-position: 50% 100%; }
+.hachi-renderer__sprite[data-pose="sleeping"] { background-position: 100% 100%; }
+.hachi-renderer__placeholder { width: 104px; height: 104px; margin: 28px auto 0; display: grid; place-items: center; align-content: center; position: relative; border: 3px solid #fff; border-radius: 48% 52% 45% 55%; background: var(--hachi-cream); box-shadow: 0 12px 30px rgba(52,37,31,.2); }
+.hachi-renderer__placeholder svg { width: 29px; color: var(--hachi-red); }.hachi-renderer__placeholder b { font: 700 16px var(--font-display); }.hachi-renderer__placeholder small { width: 76px; margin-top: 2px; font-size: 7px; text-align: center; text-transform: uppercase; }.hachi-renderer__placeholder i { position: absolute; right: -6px; top: -12px; color: var(--hachi-red); font: 700 14px var(--font-display); }
+.hachi-root.is-facing-right .hachi-renderer__asset { transform: scaleX(-1); }
+.hachi-root.is-facing-left .hachi-renderer__asset { transform: scaleX(1); }
+.hachi-root.is-facing-right .hachi-renderer__sprite { transform: scaleX(-1); }
+.hachi-root.is-facing-left .hachi-renderer__sprite { transform: scaleX(1); }
+.hachi-trigger { cursor: grab; touch-action: none; }
+.hachi-root.is-dragging .hachi-trigger { cursor: grabbing; filter: drop-shadow(0 16px 20px rgba(52,37,31,.26)); }
+.hachi-root.is-dragging .hachi-renderer { transform: scale(1.04); animation: none !important; }
+.hachi-menu-dot { position: absolute; right: -5px; top: 18px; z-index: 3; width: 34px; height: 34px; display: grid; place-items: center; padding: 0; border: 2px solid #fff; border-radius: 50%; background: var(--hachi-red); color: #fff; box-shadow: 0 6px 16px rgba(52,37,31,.22); pointer-events: auto; }
+.hachi-menu-dot svg { width: 16px; }
+.hachi-match { display: flex; align-items: center; gap: 8px; margin: 9px 0 5px; }
+.hachi-match__score { flex: 0 0 auto; padding: 6px 9px; border-radius: 999px; background: var(--hachi-red); color: #fff; font-size: 11px; font-weight: 800; }
+.hachi-match__label { color: var(--hachi-muted); font-size: 10px; line-height: 1.3; }
+.hachi-match-reasons { margin: 8px 0 0; padding-left: 18px; color: var(--hachi-ink); font-size: 11px; line-height: 1.45; }
+.hachi-match-reasons li + li { margin-top: 3px; }
+.hachi-data-note { margin-top: 9px !important; padding: 8px 9px; border-radius: 10px; background: #f5efe3; color: var(--hachi-muted); font-size: 9px !important; }
+.hachi-caution { color: #8b492f !important; }
+.hachi-root.is-walking .hachi-renderer { animation: hachi-walk .46s ease-in-out infinite; }
+.hachi-root.is-running .hachi-renderer { animation: hachi-run .27s ease-in-out infinite; }
+.hachi-root.is-sniffing .hachi-renderer { animation: hachi-sniff 1.15s ease-in-out infinite; }
+.hachi-root.is-sitting .hachi-renderer { transform: translateY(8px) scale(.96); }
+.hachi-root.is-lying .hachi-renderer, .hachi-root.is-sleeping .hachi-renderer { transform: translateY(12px); filter: saturate(.72); }
+.hachi-root.is-stretching .hachi-renderer { animation: hachi-stretch 1.5s ease-in-out both; }
+.hachi-root.is-tailWagging .hachi-renderer, .hachi-root.is-excited .hachi-renderer { animation: hachi-wag .38s ease-in-out infinite; }
+.hachi-root.is-headTilting .hachi-renderer, .hachi-root.is-looking .hachi-renderer { animation: hachi-head-tilt 1.5s ease-in-out both; }
+.hachi-root.is-jumping .hachi-renderer, .hachi-root.is-celebrating .hachi-renderer { animation: hachi-jump .68s cubic-bezier(.2,.9,.25,1) both; }
+.hachi-root.is-entering .hachi-renderer, .hachi-root.is-peeking .hachi-renderer { animation: hachi-peek .7s cubic-bezier(.2,.85,.25,1) both; }
+.hachi-root.is-thinking .hachi-renderer { animation: hachi-breathe 1.7s ease-in-out infinite; filter: saturate(.78); }
+.hachi-root.is-startled .hachi-renderer { animation: hachi-startled .42s ease-out both; }
+.hachi-root.is-resting .hachi-trigger__badge { display: none; }
+.hachi-root.is-hidden { width: 54px; height: 54px; }
+.hachi-restore-tab { width: 52px; height: 52px; display: grid; place-items: center; padding: 0; border: 2px solid #fff; border-radius: 18px; background: var(--hachi-red); color: #fff; box-shadow: 0 10px 28px rgba(52,37,31,.22); pointer-events: auto; }
+.hachi-restore-tab svg { width: 23px; }.hachi-restore-tab span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.hachi-thinking-dots { position: absolute; top: 13px; right: 4px; display: flex; gap: 3px; padding: 8px; border-radius: 999px; background: #fffaf0; box-shadow: 0 5px 15px rgba(52,37,31,.15); }.hachi-thinking-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--hachi-red); animation: hachi-dot .9s infinite alternate; }.hachi-thinking-dots i:nth-child(2) { animation-delay: .15s; }.hachi-thinking-dots i:nth-child(3) { animation-delay: .3s; }
+.hachi-sleep-z { position: absolute; right: 3px; top: 8px; color: var(--hachi-red); font: 700 16px var(--font-display); animation: hachi-z 1.8s ease-out infinite; }
+.hachi-trigger__badge { display: none; }
+
+.hachi-root.is-left-side .hachi-popover { left: 102px; right: auto; border-radius: 24px 24px 24px 7px; }
+.hachi-root.is-left-side .hachi-popover::after { left: -1px; right: auto; transform: scaleX(-1); }
+.hachi-root.is-left-side .hachi-panel { left: 104px; right: auto; transform-origin: left bottom; }
+.hachi-pet-choices { display: grid !important; grid-template-columns: 1fr 1fr; gap: 7px !important; }
+.hachi-pet-choices button { min-width: 0; min-height: 44px; justify-content: flex-start !important; gap: 7px; padding-inline: 11px !important; border-radius: 13px !important; text-align: left; font-size: 11px; line-height: 1.2; white-space: nowrap; transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.hachi-pet-choices button svg { width: 15px; flex: 0 0 auto; }
+.hachi-pet-choices button:hover { box-shadow: 0 5px 14px rgba(52,37,31,.12); transform: translateY(-1px); }
+.hachi-pet-choices button:active { box-shadow: none; transform: translateY(0) scale(.98); }
+.hachi-pet-choices button:disabled { cursor: not-allowed; box-shadow: none; opacity: .5; transform: none; }
+.hachi-pet-choices--main .hachi-pet-choice--primary { grid-column: 1 / -1; justify-content: center !important; background: var(--hachi-red); color: #fff; font-size: 12px; }
+.hachi-pet-choices--main .hachi-pet-choice--primary:hover { background: #d9230c; }
+.hachi-menu-tools { display: grid !important; grid-template-columns: 1fr 1fr; gap: 7px !important; margin-top: 8px; }
+.hachi-menu-tools button { min-width: 0; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 12px; border: 1px solid rgba(52,37,31,.12); border-radius: 13px; background: transparent !important; color: var(--hachi-ink) !important; font: 700 11px var(--font-body); transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+.hachi-menu-tools button svg { width: 15px; }
+.hachi-menu-tools button:hover { border-color: rgba(52,37,31,.22); background: #f3eadb !important; }
+.hachi-menu-tools button:active { transform: scale(.98); }
+.hachi-menu-tools .hachi-menu-bark { border-color: rgba(239,41,15,.24); color: var(--hachi-red) !important; }
+.hachi-pet-choices--settings .hachi-setting--hide, .hachi-pet-choices--settings .hachi-setting--reset { border: 1px solid rgba(52,37,31,.16); background: transparent; color: var(--hachi-ink); }
+.hachi-pet-choices--settings .hachi-setting--hide:hover, .hachi-pet-choices--settings .hachi-setting--reset:hover { border-color: rgba(52,37,31,.28); background: #f3eadb; }
+.hachi-pet-choices--settings .hachi-setting--reset { grid-column: 1 / -1; justify-content: center !important; }
+.hachi-hide-confirm { display: grid !important; gap: 12px !important; padding: 14px; border: 1px solid rgba(52,37,31,.1); border-radius: 16px; background: rgba(255,255,255,.38); }
+.hachi-hide-confirm > strong { padding: 0; font-size: 16px; }
+.hachi-hide-confirm > div { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.hachi-hide-confirm button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; border: 1px solid rgba(52,37,31,.12) !important; border-radius: 13px !important; font-size: 11px; font-weight: 700; }
+.hachi-hide-confirm .hachi-setting--hide { background: transparent !important; color: var(--hachi-ink) !important; }
+.hachi-hide-confirm .hachi-setting--hide:hover { border-color: rgba(52,37,31,.28) !important; background: #f3eadb !important; }
+.hachi-hide-confirm button svg { width: 15px; }
+.hachi-header-avatar { overflow: hidden; padding: 0; }
+.hachi-header-avatar .hachi-renderer { width: 52px; height: 52px; transform: none; }
+.hachi-header-avatar .hachi-renderer__asset { object-fit: contain; }
+.hachi-header-avatar .hachi-renderer__placeholder { width: 46px; height: 46px; margin: 0; border: 0; border-radius: 15px; background: var(--hachi-red); box-shadow: none; color: #fff; }
+.hachi-header-avatar .hachi-renderer__placeholder svg { color: #fff; }
+.hachi-header-avatar .hachi-renderer__placeholder b, .hachi-header-avatar .hachi-renderer__placeholder small, .hachi-header-avatar .hachi-renderer__placeholder i { display: none; }
+.hachi-recommended-highlight { animation: hachi-card-highlight 1s ease-in-out 4; position: relative; z-index: 2; }
+.hachi-debug { position: absolute; left: 104px; top: 0; width: 190px; display: grid; gap: 2px; padding: 9px 11px; border-radius: 12px; background: rgba(20,18,16,.9); color: #fff; font: 10px/1.3 ui-monospace, monospace; pointer-events: none; }.hachi-debug b { color: #ffcf51; }.hachi-debug span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+@keyframes hachi-walk { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-6px) rotate(1deg); } }
+@keyframes hachi-run { 0%,100% { transform: translateY(0) rotate(-3deg) scaleX(1.02); } 50% { transform: translateY(-10px) rotate(3deg) scaleX(.98); } }
+@keyframes hachi-sniff { 0%,100% { transform: rotate(0); } 45%,65% { transform: translate(6px,5px) rotate(5deg); } }
+@keyframes hachi-stretch { 0%,100% { transform: scale(1); } 50% { transform: translateY(8px) scaleX(1.08) scaleY(.9); } }
+@keyframes hachi-wag { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(3deg) translateY(-3px); } }
+@keyframes hachi-head-tilt { 0%,100% { transform: rotate(0); } 45%,70% { transform: rotate(7deg); } }
+@keyframes hachi-jump { 0%,100% { transform: translateY(0); } 45% { transform: translateY(-22px) rotate(-3deg); } }
+@keyframes hachi-peek { from { opacity: 0; transform: translateX(45px) rotate(6deg); } to { opacity: 1; transform: none; } }
+@keyframes hachi-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(.96); } }
+@keyframes hachi-startled { 0% { transform: scale(.88); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes hachi-dot { to { transform: translateY(-4px); opacity: .4; } }
+@keyframes hachi-z { from { opacity: 0; transform: translate(0,4px) scale(.8); } 60% { opacity: 1; } to { opacity: 0; transform: translate(8px,-14px) scale(1.15); } }
+@keyframes hachi-card-highlight { 50% { box-shadow: 0 0 0 5px rgba(239,41,15,.2), 0 22px 50px rgba(52,37,31,.16); transform: translateY(-3px); } }
+
+@media (max-width: 700px) {
+  .hachi-root { left: 0; top: 0; right: auto; bottom: auto; width: 96px; height: 108px; }
+  .hachi-root.is-left-side .hachi-popover, .hachi-root.is-right-side .hachi-popover { position: absolute; left: var(--hachi-mobile-left); right: auto; bottom: calc(100% + 12px); width: calc(100vw - 24px); max-height: min(58svh, 520px); overflow-x: hidden; overflow-y: auto; border-radius: 22px 22px 7px 22px; }
+  .hachi-root.is-left-side .hachi-panel, .hachi-root.is-right-side .hachi-panel { position: absolute; left: calc(6px - var(--hachi-world-x)); right: auto; top: calc(100svh - var(--hachi-world-y) - min(82svh, 720px)); bottom: auto; width: calc(100vw - 12px); }
+  .hachi-root.is-panel-open .hachi-trigger { opacity: 0; pointer-events: none; }
+  .hachi-pet-choices { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 360px) {
+  .hachi-pet-choices--main { grid-template-columns: 1fr; }
+  .hachi-pet-choices--main .hachi-pet-choice--primary { grid-column: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hachi-root { will-change: auto; }
+  .hachi-renderer, .hachi-thinking-dots i, .hachi-sleep-z, .hachi-recommended-highlight { animation: none !important; }
+}

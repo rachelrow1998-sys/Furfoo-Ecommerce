@@ -1,0 +1,18 @@
+node_modules
+dist
+.DS_Store
+*.local
+
+# Local Codex and preview artifacts
+.agents/
+.codex-vite-*.log
+.version1-preview-dist/
+skills-lock.json
+
+# Archived and design QA material (not required by the production site)
+Version 1/
+audit-current-*/
+audit-homepage/
+design-qa*.png
+design-qa.md
+video-output/
