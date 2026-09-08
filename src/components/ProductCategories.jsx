@@ -5,9 +5,9 @@ import SectionReveal from './SectionReveal'
 import GlassSurface from './GlassSurface'
 
 const categories = [
-  { num: '01', title: 'Natural Treats', desc: 'Honest meat, fish, fruit and vegetables.', image: '/media/products/wholesome-chips.jpg' },
+  { num: '01', title: 'Natural Treats', desc: 'Honest meat, fish, fruit and vegetables.', image: '/media/products/natural-treats-hero.jpg' },
   { num: '02', title: 'Functional Treats', desc: 'Daily support for skin, coat and happy tummies.', image: '/media/products/duck-salmon-roll.jpg' },
-  { num: '03', title: 'Herbal Care', desc: 'Gentle botanical soaks for calmer skin.', image: '/media/products/all-in-one.jpg' },
+  { num: '03', title: 'Herbal Care', desc: 'Gentle botanical soaks for calmer skin.', image: '/media/products/herbal-care-soak.jpg' },
   { num: '04', title: 'Daily Essentials', desc: 'Thoughtful clean-up for everyday adventures.', image: '/media/products/greens-biscuits.jpg' },
 ]
 
