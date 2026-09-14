@@ -5,10 +5,10 @@ import SectionReveal from './SectionReveal'
 import GlassSurface from './GlassSurface'
 
 const categories = [
-  { num: '01', title: 'Natural Treats', desc: 'Honest meat, fish, fruit and vegetables.', image: '/media/products/natural-treats-hero.jpg' },
-  { num: '02', title: 'Functional Treats', desc: 'Daily support for skin, coat and happy tummies.', image: '/media/products/duck-salmon-roll.jpg' },
-  { num: '03', title: 'Herbal Care', desc: 'Gentle botanical soaks for calmer skin.', image: '/media/products/herbal-care-sachets.jpg' },
-  { num: '04', title: 'Daily Essentials', desc: 'Thoughtful clean-up for everyday adventures.', image: '/media/products/greens-biscuits.jpg' },
+  { num: '01', title: 'Herbal Bath', desc: 'Botanical soak sachets for itch, bugs and shiny coats.', image: '/media/products/herbal-bath-sachets.jpg' },
+  { num: '02', title: 'Treats', desc: 'Honest meat, fish, fruit and vegetables.', image: '/media/products/all-in-one.jpg' },
+  { num: '03', title: 'Shampoo', desc: 'Plant-based washes for everyday coat care.', image: '/media/products/shampoo.jpg' },
+  { num: '04', title: 'Scent Pouch', desc: 'Dried botanicals that keep beds and corners fresh.', image: '/media/products/scent-pouch.jpg' },
 ]
 
 export default function ProductCategories() {
