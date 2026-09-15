@@ -4,10 +4,11 @@ import { Link } from 'react-router-dom'
 import { getSmoothScroll, onVirtualScroll } from '../utils/smoothScroll'
 import './OurStory.css'
 
-// Drop the lifestyle photo in public/media/brand/ and point this at it to
-// replace the reserved placeholder. Shot brief: pet and owner in natural light,
-// warm tones, uncluttered background, framed for a 4:5 crop.
-const STORY_IMAGE = null
+// The lifestyle photo. Save the file at public/media/brand/story-family.jpg;
+// until it exists the slot falls back to the placeholder rather than showing a
+// broken image, so this path can be set ahead of the asset landing.
+const STORY_IMAGE = '/media/brand/story-family.jpg'
+const STORY_IMAGE_ALT = 'A Furfoo owner sitting on the floor at home with her dog and cat resting against her.'
 
 // The brief's button links to a brand story page. The router has no such route
 // yet (Our Story points back at this section), so the button is left out rather
@@ -17,6 +18,7 @@ const STORY_PAGE = null
 export default function OurStory() {
   const storyRef = useRef(null)
   const [revealed, setRevealed] = useState(false)
+  const [imageFailed, setImageFailed] = useState(false)
 
   // Plays once: the observer disconnects on the first intersection.
   useEffect(() => {
@@ -218,8 +220,8 @@ export default function OurStory() {
       </div>
 
       <div className="story-intro__media">
-        {STORY_IMAGE
-          ? <img src={STORY_IMAGE} alt="A Furfoo pet and their owner together in natural light." loading="lazy"/>
+        {STORY_IMAGE && !imageFailed
+          ? <img src={STORY_IMAGE} alt={STORY_IMAGE_ALT} loading="lazy" onError={() => setImageFailed(true)}/>
           : <div className="story-intro__placeholder">
               <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="16" rx="3"/>

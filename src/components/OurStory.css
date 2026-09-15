@@ -97,8 +97,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Keeps the pair's faces in frame when the column is taller than it is wide. */
-  object-position: center 35%;
+  /* The source is already near 4:5, so this only nudges the crop; it favours the
+     upper-middle band where the animals' faces sit over the floor below them. */
+  object-position: center 42%;
 }
 
 /* Stand-in for the lifestyle photo. No shipped asset matches the brief, and an
