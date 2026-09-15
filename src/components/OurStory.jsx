@@ -178,10 +178,9 @@ export default function OurStory() {
   return <section className="story section" id="story" ref={storyRef}>
     <div className="section-shell story-grid">
       <div className="story-text">
-        <ScrollReveal {...revealAnimation} containerClassName="story-scroll-reveal story-heading">Welcome to FURFOO</ScrollReveal>
-        <ScrollReveal {...revealAnimation} as="p" containerClassName="story-scroll-reveal story-tagline">A home built with love for every furkid.</ScrollReveal>
-        <ScrollReveal {...revealAnimation} as="p" containerClassName="story-scroll-reveal story-body">At FURFOO, pets are more than companions — they are family, and our greatest fortune. Every product we create is natural, gentle, and lovingly handcrafted to bring comfort, care, and joy to the ones who give us theirs every day.</ScrollReveal>
-        <ScrollReveal {...revealAnimation} as="p" containerClassName="story-scroll-reveal story-body story-body--closing">From soothing herbal care to fresh handmade treats, this is where fur meets fortune — and where love always feels at home.</ScrollReveal>
+        <ScrollReveal {...revealAnimation} containerClassName="story-scroll-reveal story-heading">Welcome To FurFoo</ScrollReveal>
+        <ScrollReveal {...revealAnimation} as="p" containerClassName="story-scroll-reveal story-tagline">A home built on love for every furkid.</ScrollReveal>
+        <ScrollReveal {...revealAnimation} as="p" containerClassName="story-scroll-reveal story-body">Here, we believe pets are more than companions; they are family, our greatest fortune. Every product we create is a reflection of that bond: natural, gentle, and lovingly handcrafted to bring comfort and joy to the ones who give us theirs every day. From the calm of herbal care to the delight of fresh handmade treats, FURFOO is where fur truly meets fortune — and where love always feels at home.</ScrollReveal>
       </div>
     </div>
   </section>

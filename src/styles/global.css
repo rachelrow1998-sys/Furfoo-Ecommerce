@@ -912,8 +912,10 @@ body::before { opacity: .055; }
   margin-bottom: clamp(30px, 4vw, 48px);
 }
 
+/* Sized to keep "Welcome To FurFoo" on a single line inside --home-reading. */
 .home-page .story-heading .scroll-reveal-text {
-  font-size: clamp(60px, 7.2vw, 104px);
+  font-size: clamp(36px, 4.4vw, 62px);
+  white-space: nowrap;
 }
 
 .home-page .story-tagline {
@@ -922,22 +924,22 @@ body::before { opacity: .055; }
 }
 
 .home-page .story-tagline .scroll-reveal-text {
-  font-size: clamp(30px, 3.5vw, 48px);
-  line-height: 1.12;
+  font-size: clamp(21px, 2.2vw, 31px);
+  line-height: 1.18;
 }
 
 .home-page .story-body {
-  width: min(100%, 720px);
+  width: min(100%, 760px);
   margin-bottom: clamp(28px, 3.5vw, 42px);
 }
 
 .home-page .story-body .scroll-reveal-text {
-  font-size: clamp(18px, 1.5vw, 23px);
-  line-height: 1.62;
-  letter-spacing: -.018em;
+  font-size: clamp(16px, 1.15vw, 18px);
+  line-height: 1.68;
+  letter-spacing: -.008em;
 }
 
-.home-page .story-body--closing { margin-bottom: 0; }
+.home-page .story-body:last-child { margin-bottom: 0; }
 
 .home-page .section-head {
   gap: clamp(30px, 5vw, 72px);
@@ -1076,9 +1078,9 @@ body::before { opacity: .055; }
   }
 
   .home-page .story-text { width: 100%; }
-  .home-page .story-heading .scroll-reveal-text { font-size: clamp(48px, 12vw, 72px); }
-  .home-page .story-tagline .scroll-reveal-text { font-size: clamp(27px, 7vw, 38px); }
-  .home-page .story-body .scroll-reveal-text { font-size: clamp(17px, 4.2vw, 20px); }
+  .home-page .story-heading .scroll-reveal-text { font-size: clamp(30px, 7.4vw, 44px); white-space: normal; }
+  .home-page .story-tagline .scroll-reveal-text { font-size: clamp(20px, 4.8vw, 26px); }
+  .home-page .story-body .scroll-reveal-text { font-size: clamp(15px, 3.8vw, 17px); }
 
   .home-page .category-section-copy { margin-top: 24px; }
   .home-page .category-panel-story {
