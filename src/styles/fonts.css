@@ -1,0 +1,61 @@
+/* FURFOO brand typefaces.
+   Both are licensed/custom faces, so the files live in /public/fonts and are not
+   fetched from a CDN. See public/fonts/README.md for the expected filenames.
+   Each face falls back gracefully until the files are dropped in. */
+
+/* Display — PinkSunset (headings, logo lockups, accents) */
+@font-face {
+  font-family: 'PinkSunset';
+  src: url('/fonts/PinkSunset.woff2') format('woff2'),
+       url('/fonts/PinkSunset.woff') format('woff'),
+       url('/fonts/PinkSunset.otf') format('opentype'),
+       url('/fonts/PinkSunset.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Body — Gotham */
+@font-face {
+  font-family: 'Gotham';
+  src: url('/fonts/Gotham-Book.woff2') format('woff2'),
+       url('/fonts/Gotham-Book.woff') format('woff'),
+       url('/fonts/Gotham-Book.otf') format('opentype'),
+       url('/fonts/Gotham-Book.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gotham';
+  src: url('/fonts/Gotham-Medium.woff2') format('woff2'),
+       url('/fonts/Gotham-Medium.woff') format('woff'),
+       url('/fonts/Gotham-Medium.otf') format('opentype'),
+       url('/fonts/Gotham-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gotham';
+  src: url('/fonts/Gotham-Bold.woff2') format('woff2'),
+       url('/fonts/Gotham-Bold.woff') format('woff'),
+       url('/fonts/Gotham-Bold.otf') format('opentype'),
+       url('/fonts/Gotham-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gotham';
+  src: url('/fonts/Gotham-Black.woff2') format('woff2'),
+       url('/fonts/Gotham-Black.woff') format('woff'),
+       url('/fonts/Gotham-Black.otf') format('opentype'),
+       url('/fonts/Gotham-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
