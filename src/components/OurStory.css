@@ -1,0 +1,186 @@
+/* Brand intro section. Palette is pinned to the values the brand spec gives,
+   which sit a shade warmer than the global --furfoo-* tokens. */
+.story-intro {
+  --intro-paper: #FAF7F2;
+  --intro-red: #B82025;
+  --intro-ink: #342D29;
+  --intro-muted: rgba(52, 45, 41, .62);
+
+  background: var(--intro-paper);
+  color: var(--intro-ink);
+  padding-block: 96px;
+}
+
+.story-intro__grid {
+  width: min(100% - 48px, 1200px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 45fr 55fr;
+  align-items: center;
+  gap: 64px;
+}
+
+.story-intro__text { max-width: 460px; }
+
+.story-intro__eyebrow {
+  margin: 0 0 16px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--intro-muted);
+}
+
+.story-intro__title {
+  margin: 0 0 24px;
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -.01em;
+  color: var(--intro-red);
+}
+
+.story-intro__lede {
+  margin: 0 0 24px;
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--intro-ink);
+}
+
+.story-intro__traits {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--intro-red);
+}
+
+/* Outlined brand-red pill. Only rendered when a story page exists to link to. */
+.story-intro__cta {
+  margin-top: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 24px;
+  border: 1px solid var(--intro-red);
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--intro-red);
+  background: transparent;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+.story-intro__cta-arrow { transition: transform .2s ease; }
+
+.story-intro__cta:hover {
+  background: var(--intro-red);
+  color: var(--intro-paper);
+}
+
+.story-intro__cta:hover .story-intro__cta-arrow { transform: translateX(4px); }
+
+.story-intro__media {
+  aspect-ratio: 4 / 5;
+  border-radius: 32px;
+  overflow: hidden;
+}
+
+.story-intro__media > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Keeps the pair's faces in frame when the column is taller than it is wide. */
+  object-position: center 35%;
+}
+
+/* Stand-in for the lifestyle photo. No shipped asset matches the brief, and an
+   unrelated image would misrepresent the brand, so the slot stays reserved. */
+.story-intro__placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  background: #F3ECE3;
+  border: 1px solid rgba(52, 45, 41, .1);
+}
+
+.story-intro__placeholder svg { color: rgba(52, 45, 41, .32); }
+
+.story-intro__placeholder p {
+  margin: 0;
+  max-width: 24ch;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--intro-muted);
+}
+
+/* Entrance: one pass, no scrub. Groups share a 600ms fade/rise, staggered 100ms;
+   the image gets its own longer settle. */
+.story-intro__reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+
+.story-intro__media {
+  opacity: 0;
+  transform: scale(1.03);
+  transition: opacity .8s ease, transform .8s ease;
+}
+
+.story-intro.is-visible .story-intro__reveal,
+.story-intro.is-visible .story-intro__media {
+  opacity: 1;
+  transform: none;
+}
+
+.story-intro.is-visible .story-intro__reveal:nth-child(2) { transition-delay: .1s; }
+.story-intro.is-visible .story-intro__reveal:nth-child(3) { transition-delay: .2s; }
+.story-intro.is-visible .story-intro__reveal:nth-child(4) { transition-delay: .3s; }
+.story-intro.is-visible .story-intro__reveal:nth-child(5) { transition-delay: .4s; }
+
+@media (max-width: 860px) {
+  .story-intro { padding-block: 56px; }
+
+  .story-intro__grid {
+    width: calc(100% - 48px);
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .story-intro__text { max-width: none; }
+  .story-intro__eyebrow { font-size: 11px; }
+  .story-intro__title { font-size: 34px; }
+  .story-intro__lede { font-size: 16px; }
+  .story-intro__traits { font-size: 13px; }
+  .story-intro__cta { font-size: 14px; }
+}
+
+/* The two-line break is a desktop composition; on a phone the line would
+   overflow, so it wraps on its own. The markup keeps a real space before the
+   <br>, so collapsing it here cannot run the two words together. */
+@media (max-width: 520px) {
+  .story-intro__title br { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-intro__reveal,
+  .story-intro__media {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

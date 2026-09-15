@@ -13,16 +13,6 @@
   display: inline-block;
 }
 
-.story-scroll-reveal {
-  margin: 0;
-}
-
-.story-scroll-reveal .scroll-reveal-text {
-  font: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
-}
-
 .section-scroll-reveal {
   margin: 0;
 }
