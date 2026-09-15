@@ -8,9 +8,9 @@ import './OurStory.css'
 // A matched pair shot on the same set: same room, same framing, same 4:5 crop,
 // only the animal differs. The cat is uncovered under the cursor, so the two
 // have to line up exactly.
-const STORY_IMAGE = '/media/brand/story-harness-dog.jpg'
+const STORY_IMAGE = '/media/brand/story-harness-dog.webp'
 const STORY_IMAGE_ALT = 'A Shiba Inu sitting on a living room floor in a black Furfoo harness.'
-const STORY_REVEAL_IMAGE = '/media/brand/story-harness-cat.jpg'
+const STORY_REVEAL_IMAGE = '/media/brand/story-harness-cat.webp'
 const STORY_REVEAL_IMAGE_ALT = 'A tabby cat sitting in the same living room, in the same black Furfoo harness.'
 // If the pair is missing, the slot keeps the older lifestyle photo rather than
 // dropping to the placeholder. That photo is a different scene, so the reveal
