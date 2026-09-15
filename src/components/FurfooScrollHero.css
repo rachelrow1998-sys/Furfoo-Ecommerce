@@ -53,8 +53,8 @@
 
 .furfoo-scroll-hero__brief h1 {
   margin: 0;
-  font: 600 clamp(38px, 3.2vw, 46px)/.98 var(--font-display);
-  letter-spacing: -.055em;
+  font: 900 clamp(38px, 3.2vw, 46px)/1.05 var(--font-display);
+  letter-spacing: -.012em;
 }
 
 .furfoo-scroll-hero__brief-footer {
@@ -189,7 +189,7 @@
 }
 
 .furfoo-scroll-hero__loader span {
-  font: 600 13px var(--font-display);
+  font: 600 13px var(--font-body);
   letter-spacing: .08em;
   text-transform: uppercase;
 }

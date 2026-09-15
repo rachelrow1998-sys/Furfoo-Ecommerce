@@ -62,7 +62,7 @@
 .hachi-panel__drag-handle svg { width: 25px; height: 16px; }
 .hachi-header-avatar { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 15px; background: var(--hachi-red); color: white; transform: rotate(-3deg); }
 .hachi-header-avatar svg { width: 23px; }
-.hachi-panel__header h2 { margin: 0; font: 700 23px/.95 var(--font-display); letter-spacing: -.035em; }
+.hachi-panel__header h2 { margin: 0; font: 800 23px/1.05 var(--font-display); letter-spacing: -.008em; }
 .hachi-panel__header p { margin: 3px 0 2px; color: var(--hachi-muted); font-size: 11px; }
 .hachi-panel__header span { display: inline-flex; align-items: center; gap: 5px; color: #4f6944; font-size: 10px; font-weight: 700; }
 .hachi-panel__header span i { width: 7px; height: 7px; border-radius: 50%; background: #58a647; box-shadow: 0 0 0 3px rgba(88,166,71,.13); }
