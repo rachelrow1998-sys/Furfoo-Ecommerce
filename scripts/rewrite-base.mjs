@@ -16,7 +16,7 @@ if (!base || !base.startsWith('/') || !base.endsWith('/')) {
 }
 if (base === '/') { console.log('base is root, nothing to rewrite'); process.exit(0) }
 
-const dirs = ['media', 'videos', 'sounds', 'hachi', 'cursor']
+const dirs = ['media', 'videos', 'sounds', 'hachi', 'cursor', 'fonts']
 const pattern = new RegExp(`(["'\`(])/(${dirs.join('|')})/`, 'g')
 
 const walk = (dir) => readdirSync(dir).flatMap((entry) => {
