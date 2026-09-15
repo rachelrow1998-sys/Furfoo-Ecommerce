@@ -27,11 +27,10 @@
   --pad: clamp(20px, 4vw, 72px);
   --font-display: 'PinkSunset', 'Playfair Display', 'Times New Roman', Georgia, serif;
   --font-body: 'Gotham', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  /* PinkSunset ships a single weight; faux-bolding a display face smears it. */
-  --font-display-weight: 400;
 }
 
 * { box-sizing: border-box; }
+html { font-synthesis-weight: none; }
 html { scroll-behavior: smooth; background: var(--furfoo-cream); }
 /* Lenis drives the scroll position itself; native smooth scrolling fights it. */
 html.lenis { scroll-behavior: auto; }
@@ -44,10 +43,10 @@ button, input { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible { outline: 3px solid var(--furfoo-red); outline-offset: 3px; }
 h1, h2, h3, p { margin-top: 0; }
-h1, h2, h3 { font-family: var(--font-display); font-weight: var(--font-display-weight); line-height: 1.06; letter-spacing: -.01em; font-synthesis-weight: none; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.06; letter-spacing: -.01em; }
 h1, h2 { color: var(--furfoo-red); }
-h3 { font-weight: var(--font-display-weight); }
-h2 { font-size: clamp(42px, 5.2vw, 82px); margin-bottom: 0; font-weight: var(--font-display-weight); }
+h3 { font-weight: 700; }
+h2 { font-size: clamp(42px, 5.2vw, 82px); margin-bottom: 0; font-weight: 900; }
 h2 em, h1 em { color: inherit; font-style: normal; }
 
 @media (hover: hover) and (pointer: fine) {
@@ -767,7 +766,7 @@ body::before { opacity: .055; }
 
 .featured > .section-shell { padding-top: clamp(76px, 8vw, 126px); }
 .featured-promo .promo-parallax { padding-block: clamp(16px, 1.6vw, 23px); }
-.featured-promo .promo-scroller { font-size: clamp(24px, 2.5vw, 40px); font-weight: var(--font-display-weight, 800); }
+.featured-promo .promo-scroller { font-size: clamp(24px, 2.5vw, 40px); font-weight: 800; }
 .featured-head { margin-bottom: 42px; }
 .product-grid { gap: 16px; }
 .product-reel-head { min-height: 54px; }
