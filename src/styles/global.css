@@ -779,7 +779,7 @@ body::before { opacity: .055; }
   .wordmark { width: 80px; height: 50px; }
   .story { border-radius: 26px 26px 0 0; }
   .section-head { margin-bottom: 42px; }
-  .category-panel-story { --category-panel-height: 400px; --category-lens-height: 104px; }
+  .category-panel-story { --category-lens-height: 104px; }
   .category-panels { gap: 52px; padding-block: 50px; }
   .category-panel { min-height: 0; height: var(--category-panel-height); }
   .product-reel-viewport,
@@ -796,7 +796,6 @@ body::before { opacity: .055; }
   .reviews .section-head h2,
   .faq-intro h2 { font-size: clamp(38px, 12vw, 50px); }
   .eyebrow { font-size: 9px; }
-  .category-panel-story { --category-panel-height: 320px; }
   .category-glass-link strong { font-size: clamp(23px, 7vw, 30px); }
   .featured-promo .promo-scroller { font-size: 24px; }
   .product-reel-viewport,
@@ -983,7 +982,6 @@ body::before { opacity: .055; }
 
   .home-page .category-section-copy { margin-top: 24px; }
   .home-page .category-panel-story {
-    --category-panel-height: 400px;
     --category-lens-height: 104px;
   }
   .home-page .category-panels { gap: 40px; padding-block: 40px; }
@@ -1006,7 +1004,6 @@ body::before { opacity: .055; }
   .home-page .section { padding-block: 64px; }
   .home-page .adoption { padding-top: 184px; }
   .home-page .eyebrow { font-size: 11px; }
-  .home-page .category-panel-story { --category-panel-height: 320px; }
   .home-page .category-glass-kicker { font-size: 9px; }
   .home-page .category-glass-link small { font-size: 11px; }
   .home-page .product-reel-viewport,
@@ -1016,4 +1013,17 @@ body::before { opacity: .055; }
 
 @media (prefers-reduced-motion: reduce) {
   .reviews-adoption-transition { will-change: auto; }
+}
+
+/* Category image frame height. Kept on its own 768/480 steps so the three sizes
+   are stated in one place; the lens track and sticky offsets are calc()'d from
+   this variable, so they follow it without further breakpoints. */
+@media (max-width: 768px) {
+  .category-panel-story,
+  .home-page .category-panel-story { --category-panel-height: 400px; }
+}
+
+@media (max-width: 480px) {
+  .category-panel-story,
+  .home-page .category-panel-story { --category-panel-height: 320px; }
 }

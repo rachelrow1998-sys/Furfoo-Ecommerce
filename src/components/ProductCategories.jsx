@@ -4,12 +4,13 @@ import { Link } from 'react-router-dom'
 import SectionReveal from './SectionReveal'
 import GlassSurface from './GlassSurface'
 
-// focus keeps the product and its pack name inside the shorter panel crop
+// Each photo is composed slightly differently, so focus is set per category to
+// keep the packaging centred as the panel gets shorter on smaller screens.
 const categories = [
-  { num: '01', title: 'Herbal Baths', desc: 'Botanical soak sachets for itch, bugs and shiny coats.', image: '/media/products/herbal-bath-sachets.jpg', focus: '50% 42%' },
-  { num: '02', title: 'Handmade Treats', desc: 'Honest meat, fish, fruit and vegetables.', image: '/media/products/treats-lineup.jpg', focus: '52% 40%' },
-  { num: '03', title: 'Botanical Care', desc: 'Plant-based washes, sprays and ear care for everyday grooming.', image: '/media/products/shampoo.jpg', focus: '50% 62%' },
-  { num: '04', title: 'Wellness Sachets', desc: 'Dried botanicals that keep beds and corners fresh.', image: '/media/products/scent-pouch.jpg', focus: '50% 55%' },
+  { num: '01', title: 'Herbal Baths', desc: 'Botanical soak sachets for itch, bugs and shiny coats.', image: '/media/products/herbal-bath-sachets.jpg', focus: 'center 46%' },
+  { num: '02', title: 'Handmade Treats', desc: 'Honest meat, fish, fruit and vegetables.', image: '/media/products/treats-lineup.jpg', focus: 'center center' },
+  { num: '03', title: 'Botanical Care', desc: 'Plant-based washes, sprays and ear care for everyday grooming.', image: '/media/products/shampoo.jpg', focus: 'center 48%' },
+  { num: '04', title: 'Wellness Sachets', desc: 'Dried botanicals that keep beds and corners fresh.', image: '/media/products/scent-pouch.jpg', focus: 'center center' },
 ]
 
 export default function ProductCategories() {
