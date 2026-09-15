@@ -1,7 +1,8 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, ChevronUp, CircleArrowDown } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import gsap from 'gsap'
-import { products } from '../data/products'
+import { shelves } from '../data/products'
 import ProductCard from './ProductCard'
 import Button from './Button'
 import SectionReveal from './SectionReveal'
@@ -26,14 +27,7 @@ function primeAudio(audio) {
   }).catch(() => { audio.muted = false })
 }
 
-const shelves = [
-  { category: 'Natural Treats', products: products.filter(product => product.category === 'Natural Treats') },
-  { category: 'Functional Treats', products: products.filter(product => product.category === 'Functional Treats') },
-  { category: 'Dental Care', products: products.filter(product => product.tags.includes('Dental care')) },
-  { category: 'Daily Rewards', products: products.filter(product => product.tags.some(tag => ['Daily energy', 'Training'].includes(tag))) },
-]
-
-const ProductReel = forwardRef(function ProductReel({ category, products: reelProducts, isSpinning, onManualInteraction }, ref) {
+const ProductReel = forwardRef(function ProductReel({ category, slug, products: reelProducts, isSpinning, onManualInteraction }, ref) {
   const viewportRef = useRef(null)
   const railRef = useRef(null)
   const currentRef = useRef(0)
@@ -137,7 +131,7 @@ const ProductReel = forwardRef(function ProductReel({ category, products: reelPr
   const controlsDisabled = isSpinning || isAnimating
 
   return <article className="product-reel" aria-label={`${category} product reel`}>
-    <header className="product-reel-head"><div><span>Category</span><h3>{category}</h3></div></header>
+    <header className="product-reel-head"><div><span>Category</span><h3><Link to={`/shop?category=${slug}`}>{category}</Link></h3></div></header>
     <div className="product-reel-control-row product-reel-control-row--top">
       <button className="direction-button direction-button--up" type="button" onClick={() => handleManual(-1)} disabled={controlsDisabled} aria-label={`Previous ${category} product`}><ChevronUp aria-hidden="true"/></button>
     </div>
@@ -267,6 +261,7 @@ export default function FeaturedProducts() {
             key={shelf.category}
             ref={node => { reelRefs.current[index] = node }}
             category={shelf.category}
+            slug={shelf.slug}
             products={shelf.products}
             isSpinning={isSpinning}
             onManualInteraction={pauseAutoForManualControl}

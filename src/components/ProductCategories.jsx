@@ -3,16 +3,12 @@ import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionReveal from './SectionReveal'
 import GlassSurface from './GlassSurface'
+import { collections as categories } from '../data/products'
 
 // The photos are square. The panel is square too and the image is contained
 // inside it, so every one is shown whole -- no per-category focus point is
-// needed, because there is nothing to crop.
-const categories = [
-  { num: '01', title: 'Herbal Baths', desc: 'Botanical soak sachets for itch, bugs and shiny coats.', image: '/media/products/herbal-bath-sachets.jpg' },
-  { num: '02', title: 'Handmade Treats', desc: 'Honest meat, fish, fruit and vegetables.', image: '/media/products/treats-lineup.jpg' },
-  { num: '03', title: 'Botanical Care', desc: 'Plant-based washes, sprays and ear care for everyday grooming.', image: '/media/products/shampoo.jpg' },
-  { num: '04', title: 'Wellness Sachets', desc: 'Dried botanicals that keep beds and corners fresh.', image: '/media/products/scent-pouch.jpg' },
-]
+// needed, because there is nothing to crop. Every panel opens the same
+// collection on the shop page, so the strip is a shortcut into the catalogue.
 
 export default function ProductCategories() {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -93,9 +89,9 @@ export default function ProductCategories() {
                 mixBlendMode="screen"
                 className="category-glass-lens"
               >
-                <Link to="/shop" className="category-glass-link" aria-label={`Explore ${activeCategory.title}`}>
+                <Link to={`/shop?category=${activeCategory.slug}`} className="category-glass-link" aria-label={`Shop ${activeCategory.title}`}>
                   <span className="category-glass-kicker">
-                    <span>Explore {activeCategory.num} / 04</span>
+                    <span>Shop {activeCategory.num} / 04</span>
                     <ArrowUpRight />
                   </span>
                   <strong key={activeCategory.title}>{activeCategory.title}</strong>
@@ -117,6 +113,7 @@ export default function ProductCategories() {
                 </div>
                 <div className="category-panel-shade" aria-hidden="true" />
                 <span className="category-panel-number">{category.num} / 04</span>
+                <Link className="category-panel-link" to={`/shop?category=${category.slug}`} aria-label={`Shop ${category.title}`} />
               </article>
             ))}
           </div>
