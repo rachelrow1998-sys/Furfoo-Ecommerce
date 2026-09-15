@@ -210,9 +210,14 @@ h2 em, h1 em { color: inherit; font-style: normal; }
 .category-lens-track { position: absolute; z-index: 6; inset: 0 0 calc(clamp(80px, 9vw, 130px) + (var(--category-panel-height) / 2) - (var(--category-lens-height) / 2)) 0; pointer-events: none; }
 .category-lens-sticky { position: sticky; top: calc(50svh - (var(--category-lens-height) / 2)); height: var(--category-lens-height); margin-top: calc(clamp(80px, 9vw, 130px) + (var(--category-panel-height) / 2) - (var(--category-lens-height) / 2)); display: grid; place-items: center; pointer-events: none; }
 .category-panels { grid-area: 1 / 1; display: grid; gap: clamp(90px, 10vw, 142px); padding-block: clamp(80px, 9vw, 130px); }
-.category-panel { position: relative; height: var(--category-panel-height); overflow: hidden; border: 1px solid rgba(255,255,255,.14); border-radius: clamp(30px, 4vw, 54px); isolation: isolate; box-shadow: 0 34px 90px rgba(0,0,0,.3); }
-.category-panel-image { position: absolute; inset: 0; z-index: -3; width: 100%; height: 100%; object-fit: cover; filter: saturate(.84) contrast(1.03); }
-.category-panel-shade { position: absolute; inset: 0; z-index: -2; background: linear-gradient(180deg, rgba(18,13,11,.08), rgba(18,13,11,.48)); }
+.category-panel { position: relative; width: min(100%, var(--category-panel-height)); margin-inline: auto; overflow: hidden; border: 1px solid rgba(255,255,255,.14); border-radius: clamp(30px, 4vw, 54px); isolation: isolate; box-shadow: 0 34px 90px rgba(0,0,0,.3); }
+/* Square box for a square photo: object-fit has no free space to crop into, so
+   the whole artwork is always visible. The mat only shows for a source that is
+   not 1:1 (treats-lineup.jpg is 4:3), where contain must letterbox rather than
+   crop -- it keeps that gap reading as matting instead of a broken image. */
+.category-image-wrapper { position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: #EFE5D6; }
+.category-panel-image { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; filter: saturate(.84) contrast(1.03); }
+.category-panel-shade { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(18,13,11,.08), rgba(18,13,11,.48)); }
 .category-panel-number { position: absolute; top: clamp(24px,3vw,42px); left: clamp(24px,3vw,42px); z-index: 2; font-size: 11px; font-weight: 800; letter-spacing: .15em; }
 .category-glass-lens { z-index: 1; pointer-events: auto; background-color: rgba(12,10,15,.54) !important; border: 1px solid rgba(255,255,255,.38); box-shadow: inset 0 2px 3px rgba(255,255,255,.72), inset 0 -5px 14px rgba(0,0,0,.32), inset 0 0 32px rgba(255,255,255,.16), 0 18px 60px rgba(0,0,0,.42), 0 0 0 2px rgba(255,255,255,.08) !important; }
 .category-glass-lens::before { content: ''; position: absolute; inset: 7px; border: 1px solid rgba(255,255,255,.24); border-radius: inherit; pointer-events: none; }
@@ -584,7 +589,7 @@ h2 em, h1 em { color: inherit; font-style: normal; }
   .category-lens-sticky { top: calc(50svh - 59px); margin-top: calc(64px + (var(--category-panel-height) / 2) - 59px); }
   .category-panels { gap: 68px; padding-block: 64px; }
   .category-panel { border-radius: 30px; }
-  .category-glass-lens { width: 84% !important; height: 118px !important; }
+  .category-glass-lens { width: min(88%, calc(var(--category-panel-height) - 32px)) !important; height: 118px !important; }
   .category-glass-kicker { margin-bottom: 4px; font-size: 7px; }
   .category-glass-link strong { font-size: clamp(24px,8vw,34px); }
   .category-glass-link small { max-width: 82%; margin-top: 4px; font-size: 9px; }
@@ -706,7 +711,7 @@ body::before { opacity: .055; }
 
 .category-panel-story { --category-panel-height: 480px; --category-lens-height: clamp(112px, 11vw, 138px); width: min(100%, 1120px); }
 .category-panels { gap: clamp(58px, 6vw, 82px); padding-block: clamp(54px, 6vw, 78px); }
-.category-panel { min-height: 0; height: var(--category-panel-height); border-radius: clamp(26px, 3vw, 42px); box-shadow: 0 24px 62px rgba(31, 24, 21, .19); }
+.category-panel { min-height: 0; border-radius: clamp(26px, 3vw, 42px); box-shadow: 0 24px 62px rgba(31, 24, 21, .19); }
 .category-panel-image { filter: saturate(.78) contrast(1.02); }
 .category-panel-shade { background: linear-gradient(180deg, rgba(18,13,11,.03), rgba(18,13,11,.38)); }
 .category-glass-link strong { font-size: clamp(27px, 3.4vw, 46px); font-weight: 800; }
@@ -781,7 +786,6 @@ body::before { opacity: .055; }
   .section-head { margin-bottom: 42px; }
   .category-panel-story { --category-lens-height: 104px; }
   .category-panels { gap: 52px; padding-block: 50px; }
-  .category-panel { min-height: 0; height: var(--category-panel-height); }
   .product-reel-viewport,
   .product-reel-slide { height: 590px; }
   .testimonial-copy { min-height: 0; }

@@ -4,13 +4,14 @@ import { Link } from 'react-router-dom'
 import SectionReveal from './SectionReveal'
 import GlassSurface from './GlassSurface'
 
-// Each photo is composed slightly differently, so focus is set per category to
-// keep the packaging centred as the panel gets shorter on smaller screens.
+// The photos are square. The panel is square too and the image is contained
+// inside it, so every one is shown whole -- no per-category focus point is
+// needed, because there is nothing to crop.
 const categories = [
-  { num: '01', title: 'Herbal Baths', desc: 'Botanical soak sachets for itch, bugs and shiny coats.', image: '/media/products/herbal-bath-sachets.jpg', focus: 'center 46%' },
-  { num: '02', title: 'Handmade Treats', desc: 'Honest meat, fish, fruit and vegetables.', image: '/media/products/treats-lineup.jpg', focus: 'center center' },
-  { num: '03', title: 'Botanical Care', desc: 'Plant-based washes, sprays and ear care for everyday grooming.', image: '/media/products/shampoo.jpg', focus: 'center 48%' },
-  { num: '04', title: 'Wellness Sachets', desc: 'Dried botanicals that keep beds and corners fresh.', image: '/media/products/scent-pouch.jpg', focus: 'center center' },
+  { num: '01', title: 'Herbal Baths', desc: 'Botanical soak sachets for itch, bugs and shiny coats.', image: '/media/products/herbal-bath-sachets.jpg' },
+  { num: '02', title: 'Handmade Treats', desc: 'Honest meat, fish, fruit and vegetables.', image: '/media/products/treats-lineup.jpg' },
+  { num: '03', title: 'Botanical Care', desc: 'Plant-based washes, sprays and ear care for everyday grooming.', image: '/media/products/shampoo.jpg' },
+  { num: '04', title: 'Wellness Sachets', desc: 'Dried botanicals that keep beds and corners fresh.', image: '/media/products/scent-pouch.jpg' },
 ]
 
 export default function ProductCategories() {
@@ -75,7 +76,7 @@ export default function ProductCategories() {
           <div className="category-lens-track">
             <div className="category-lens-sticky">
               <GlassSurface
-                width="min(72%, 690px)"
+                width="min(86%, calc(var(--category-panel-height) - 44px))"
                 height="var(--category-lens-height)"
                 borderRadius={88}
                 borderWidth={0.14}
@@ -111,7 +112,9 @@ export default function ProductCategories() {
                 key={category.title}
                 ref={(element) => { panelsRef.current[index] = element }}
               >
-                <img className="category-panel-image" src={category.image} alt="" style={{ objectPosition: category.focus }} />
+                <div className="category-image-wrapper">
+                  <img className="category-panel-image" src={category.image} alt="" />
+                </div>
                 <div className="category-panel-shade" aria-hidden="true" />
                 <span className="category-panel-number">{category.num} / 04</span>
               </article>
