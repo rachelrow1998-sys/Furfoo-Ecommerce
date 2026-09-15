@@ -5,6 +5,7 @@ import { gsap } from 'gsap'
 import { useCart } from '../store/CartContext'
 import GlassSurface from './GlassSurface'
 import PillNav from './PillNav'
+import { scrollToTarget } from '../utils/smoothScroll'
 
 const links = [
   { label: 'Home', href: '/#home' },
@@ -84,7 +85,8 @@ export default function Navbar() {
     // Explicit scrolling also handles clicks on the already-active section.
     window.requestAnimationFrame(() => {
       window.setTimeout(() => {
-        document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        const target = document.querySelector(hash)
+        if (target) scrollToTarget(target)
       }, location.pathname === '/' ? 0 : 50)
     })
   }

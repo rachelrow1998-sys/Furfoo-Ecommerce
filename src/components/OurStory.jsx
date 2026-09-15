@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import ScrollReveal from './ScrollReveal'
+import { getSmoothScroll, onVirtualScroll } from '../utils/smoothScroll'
 
 const revealAnimation = {
   baseOpacity: 0.28,
@@ -17,6 +18,7 @@ export default function OurStory() {
     const story = storyRef.current
     if (!story) return undefined
 
+    const lenis = getSmoothScroll()
     let snapTween
     let touchStartY = null
     let isSnapping = false
@@ -28,8 +30,13 @@ export default function OurStory() {
       return hero ? window.scrollY + hero.getBoundingClientRect().top : 0
     }
     const shouldIgnoreScroll = (target) => target instanceof Element && Boolean(
-      target.closest('.hachi-panel, [data-no-page-snap], input, textarea, select'),
+      target.closest('.hachi-panel, [data-no-page-snap], [data-lenis-prevent], input, textarea, select'),
     )
+
+    const snapDuration = (distance) => gsap.utils.clamp(0.68, 1.05, distance / 1100)
+    // power3.inOut, so the snap leaves and lands on the same curve as the rest
+    // of the page glide instead of stopping dead.
+    const snapEase = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
     const snapTo = (targetY, getFinalTarget = () => targetY) => {
       isSnapping = true
@@ -40,18 +47,35 @@ export default function OurStory() {
         return true
       }
 
+      const releaseSnap = () => {
+        window.setTimeout(() => { isSnapping = false }, 100)
+      }
+
+      if (lenis) {
+        lenis.scrollTo(targetY, {
+          duration: snapDuration(Math.abs(targetY - window.scrollY)),
+          easing: snapEase,
+          lock: true,
+          force: true,
+          onComplete: () => {
+            lenis.scrollTo(getFinalTarget(), { immediate: true, force: true })
+            releaseSnap()
+          },
+        })
+        return true
+      }
+
       const scrollPosition = { y: window.scrollY }
-      const distance = Math.abs(targetY - window.scrollY)
 
       snapTween = gsap.to(scrollPosition, {
         y: targetY,
-        duration: gsap.utils.clamp(0.68, 1.05, distance / 1100),
+        duration: snapDuration(Math.abs(targetY - window.scrollY)),
         ease: 'power3.inOut',
         overwrite: true,
         onUpdate: () => window.scrollTo(0, Math.round(scrollPosition.y)),
         onComplete: () => {
           window.scrollTo(0, getFinalTarget())
-          window.setTimeout(() => { isSnapping = false }, 100)
+          releaseSnap()
         },
       })
 
@@ -76,6 +100,26 @@ export default function OurStory() {
       ) return false
 
       return snapTo(heroTop, getHeroTop)
+    }
+
+    // With Lenis owning the wheel, the hero -> story snap has to claim the
+    // impulse before it is eased into the page, not fight the page afterwards.
+    if (lenis) {
+      const unsubscribe = onVirtualScroll(({ deltaY, event }) => {
+        if (shouldIgnoreScroll(event.target) || event.ctrlKey) return true
+        if (isSnapping) return false
+
+        const didSnap = deltaY > 0
+          ? snapStoryIntoView()
+          : deltaY < 0 && snapHeroIntoView()
+
+        return !didSnap
+      })
+
+      return () => {
+        unsubscribe()
+        snapTween?.kill()
+      }
     }
 
     const handleWheel = (event) => {

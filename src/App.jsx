@@ -8,10 +8,22 @@ import ProductDetail from './pages/ProductDetail'
 import MembersLogin from './pages/MembersLogin'
 import HachiWorld from './components/hachi/HachiWorld'
 import { playSiteSound, stopSiteSound, subscribeSiteSound } from './utils/siteSound'
+import { scrollToTarget } from './utils/smoothScroll'
 
 function ScrollManager() {
   const { pathname, hash } = useLocation()
-  useEffect(() => { if (hash) setTimeout(() => document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' }), 50); else window.scrollTo(0, 0) }, [pathname, hash])
+  useEffect(() => {
+    if (!hash) {
+      scrollToTarget(0, { immediate: true })
+      return undefined
+    }
+
+    const timer = window.setTimeout(() => {
+      const target = document.querySelector(hash)
+      if (target) scrollToTarget(target)
+    }, 50)
+    return () => window.clearTimeout(timer)
+  }, [pathname, hash])
   return null
 }
 

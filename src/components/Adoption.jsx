@@ -1,6 +1,7 @@
 import { ArrowRight, ChevronLeft, ChevronRight, MapPin, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import SectionReveal from './SectionReveal'
+import { pausePageScroll, resumePageScroll } from '../utils/smoothScroll'
 
 const pets = [
   { name: 'Maple', species: 'Cat', gender: 'Female', age: 'About 2 years', location: 'Petaling Jaya', status: 'Available', image: '/media/adoption/maple.png', personality: 'Gentle, observant, and happiest beside a sunny window.', introduction: 'Maple is a calm ginger tabby who takes a little time to say hello, then quietly chooses a favourite person to follow from room to room. She enjoys window watching, soft blankets, and slow evening company.', vaccinated: 'Yes — core vaccinations up to date', neutered: 'Yes', home: 'A calm indoor home; suitable for first-time cat guardians', contact: 'FURFOO Community Foster · Aina' },
@@ -33,10 +34,12 @@ export default function Adoption() {
     if (!selectedPet) return
     const onKeyDown = event => { if (event.key === 'Escape') closePet() }
     document.body.style.overflow = 'hidden'
+    pausePageScroll()
     window.addEventListener('keydown', onKeyDown)
     closeRef.current?.focus()
     return () => {
       document.body.style.overflow = ''
+      resumePageScroll()
       window.removeEventListener('keydown', onKeyDown)
       previousFocus.current?.focus?.()
     }
@@ -77,7 +80,7 @@ export default function Adoption() {
     </div>
 
     {selectedPet && <div className="adoption-modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) closePet() }}>
-      <div className="adoption-modal" role="dialog" aria-modal="true" aria-labelledby="adoption-modal-title">
+      <div className="adoption-modal" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="adoption-modal-title">
         <button ref={closeRef} type="button" className="adoption-modal-close" onClick={closePet} aria-label="Close pet details"><X/></button>
         <div className="adoption-modal-photo"><img src={selectedPet.image} alt={selectedPet.name}/></div>
         <div className="adoption-modal-copy">

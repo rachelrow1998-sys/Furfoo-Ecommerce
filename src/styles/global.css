@@ -31,6 +31,9 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: var(--furfoo-cream); }
+/* Lenis drives the scroll position itself; native smooth scrolling fights it. */
+html.lenis { scroll-behavior: auto; }
+html.lenis, html.lenis body { height: auto; }
 body { margin: 0; color: var(--furfoo-text); font-family: var(--font-body); background: var(--furfoo-cream); overflow-x: hidden; }
 body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 99; opacity: .13; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E"); mix-blend-mode: multiply; }
 img, video { display: block; max-width: 100%; }

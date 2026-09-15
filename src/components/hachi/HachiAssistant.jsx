@@ -916,7 +916,7 @@ export default function HachiAssistant() {
   return <div ref={rootRef} className={`hachi-root is-${visualState}${open ? ' is-panel-open' : ''}${bubbleOnRight ? ' is-left-side' : ' is-right-side'}${facing === 'right' ? ' is-facing-right' : ' is-facing-left'}${resting ? ' is-resting' : ''}${hidden ? ' is-hidden' : ''}${heroActive ? ' is-hero-hidden' : ''}${dragging ? ' is-dragging' : ''}`} style={{ '--hachi-world-x': `${position.x}px`, '--hachi-world-y': `${position.y}px`, '--hachi-mobile-left': `${12 - position.x}px` }} data-hachi-root="true" data-hachi-state={visualState} data-hachi-section={currentSection} data-hachi-behaviour={activeBehaviour}>
     {hidden && <button type="button" className="hachi-restore-tab" onClick={restoreHachi} aria-label="Bring Hachi back"><PawPrint/><span>Bring Hachi back</span></button>}
 
-    {bubbleVisible && <aside className={`hachi-popover${settingsOpen ? ' is-settings' : ''}`} aria-live="polite">
+    {bubbleVisible && <aside className={`hachi-popover${settingsOpen ? ' is-settings' : ''}`} data-lenis-prevent aria-live="polite">
       {!settingsOpen && <button className="hachi-popover__dismiss" onClick={() => { setPetMenu(false); setSettingsOpen(false); setHideConfirm(false); welcome ? dismissWelcome() : dismissPrompt(); setVisualState('idle') }} aria-label="Dismiss Hachi message"><X/></button>}
       {settingsOpen ? <>
         <div className="hachi-settings-heading"><button type="button" className="direction-button direction-button--left hachi-settings-back" aria-label="Back to Hachi menu" onClick={() => { setHideConfirm(false); setSettingsOpen(false); setPetMenu(true); setVisualState(resting ? 'sleeping' : 'headTilting') }}><ArrowLeft/></button><strong>Hachi settings</strong></div>
@@ -961,7 +961,7 @@ export default function HachiAssistant() {
           <button type="button" onClick={closePanel} aria-label="Close Hachi panel"><X/></button>
         </div>
       </header>
-      <div className="hachi-panel__messages" aria-live="polite" onWheelCapture={handlePanelWheel}>
+      <div className="hachi-panel__messages" data-lenis-prevent aria-live="polite" onWheelCapture={handlePanelWheel}>
         {screen !== 'menu' && <button type="button" className="hachi-back" onClick={() => setScreen('menu')}><ArrowLeft/> Main menu</button>}
         <HachiContent {...{ screen, setScreen, bathAnswers, setBathAnswers, treatAnswers, setTreatAnswers, selectedFaq, setSelectedFaq, selectedPet, setSelectedPet, navigateToProduct }}/>
       </div>
