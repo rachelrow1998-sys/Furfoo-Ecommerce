@@ -4,9 +4,8 @@ import { Link } from 'react-router-dom'
 import { getSmoothScroll, onVirtualScroll } from '../utils/smoothScroll'
 import './OurStory.css'
 
-// The lifestyle photo. Save the file at public/media/brand/story-family.jpg;
-// until it exists the slot falls back to the placeholder rather than showing a
-// broken image, so this path can be set ahead of the asset landing.
+// The lifestyle photo. If the file is ever missing the slot falls back to the
+// placeholder rather than rendering a broken image.
 const STORY_IMAGE = '/media/brand/story-family.jpg'
 const STORY_IMAGE_ALT = 'A Furfoo owner sitting on the floor at home with her dog and cat resting against her.'
 

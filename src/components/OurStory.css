@@ -97,8 +97,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* The source is already near 4:5, so this only nudges the crop; it favours the
-     upper-middle band where the animals' faces sit over the floor below them. */
+  /* The current photo is exactly 4:5, so nothing is cropped. This biases the
+     trim upward, toward the animals' faces, if a differently shaped one is
+     swapped in. */
   object-position: center 42%;
 }
 
