@@ -40,9 +40,11 @@ export const HERO_CONFIG = {
     shakeScale: 1.004,
   },
   intro: {
-    logoRiseDuration: 1.28,
-    logoHoldDuration: 0.24,
+    logoRiseDuration: 0.62,
+    logoLetterStagger: 0.085,
+    logoHoldDuration: 0.34,
     logoFadeDuration: 0.28,
+    logoFadeStagger: 0.028,
     cardExpandDuration: 0.82,
     hachiCrossfadeDuration: 0.38,
   },
@@ -57,6 +59,25 @@ export const HERO_CONFIG = {
   scrubVideoFrames: false,
   loadingTimeoutMs: 6500,
 }
+
+/*
+ * Slices of the intro wordmark, measured off the alpha channel of
+ * HERO_CONFIG.introLogo (237 x 200). Every piece renders the same artwork
+ * clipped to one glyph, so once they have all landed they reassemble into the
+ * original logo pixel for pixel. Boxes overlap by a hair at the seams so no
+ * anti-aliased edge goes missing. Swap the artwork and these need remeasuring.
+ */
+const INTRO_LOGO_PARTS = [
+  { id: 'f', clip: 'inset(0% 68.6% 49.4% 0%)' },
+  { id: 'u', clip: 'inset(0% 47.5% 49.4% 30.2%)' },
+  { id: 'r', clip: 'inset(0% 28.51% 49.4% 51.3%)' },
+  { id: 'paw', clip: 'inset(0% 0% 49.4% 70.29%)' },
+  { id: 'seal', clip: 'inset(49.4% 73.24% 25.4% 0%)' },
+  { id: 'f2', clip: 'inset(49.4% 55.52% 0% 25.56%)' },
+  { id: 'o1', clip: 'inset(49.4% 34.84% 25.4% 43.28%)' },
+  { id: 'o2', clip: 'inset(49.4% 0% 25.4% 63.96%)' },
+  { id: 'tagline', clip: 'inset(73.4% 0% 0% 43.28%)' },
+]
 
 const isUsableDuration = (video) =>
   video.readyState >= HTMLMediaElement.HAVE_METADATA &&
@@ -124,7 +145,10 @@ export default function FurfooScrollHero() {
       const stage = stageRef.current
       const introPanel = introPanelRef.current
       const introLogoLayer = introLogoLayerRef.current
-      const introLogo = introLogoLayer?.querySelector('img')
+      const introLetters = gsap.utils.toArray(
+        '.furfoo-scroll-hero__intro-letter',
+        introLogoLayer,
+      )
       const layers = gsap.utils.toArray('.furfoo-scroll-hero__video-layer', root)
       const videos = videoRefs.current.filter(Boolean)
       let activeIndex = -1
@@ -232,12 +256,7 @@ export default function FurfooScrollHero() {
           gsap.set(layers, { opacity: 0 })
           gsap.set(layers[0], { opacity: 1 })
           gsap.set(introLogoLayer, { opacity: 0, scale: 1 })
-          gsap.set(introLogo, {
-            x: 0,
-            y: 0,
-            opacity: 1,
-            clipPath: 'inset(0 0% 0 0)',
-          })
+          gsap.set(introLetters, { y: 0, opacity: 1 })
           gsap.set(introPanel, {
             x: 0,
             scale: 1,
@@ -320,29 +339,24 @@ export default function FurfooScrollHero() {
               scale: responsive.introInitialScale,
               transformOrigin: '50% 50%',
             })
-            gsap.set(introLogo, {
-              x: 0,
-              y: 58,
-              opacity: 0,
-              clipPath: 'inset(100% 0 0 0)',
-            })
+            gsap.set(introLetters, { y: 42, opacity: 0 })
             videos.forEach((video) => video.pause())
 
             introTimeline = gsap.timeline({ onComplete: finishIntro })
-              .to(introLogo, {
-                x: 0,
+              .to(introLetters, {
                 y: 0,
                 opacity: 1,
-                clipPath: 'inset(0 0% 0 0)',
                 duration: HERO_CONFIG.intro.logoRiseDuration,
-                ease: 'power2.out',
+                ease: 'power3.out',
+                stagger: HERO_CONFIG.intro.logoLetterStagger,
               })
               .to({}, { duration: HERO_CONFIG.intro.logoHoldDuration })
-              .to(introLogo, {
+              .to(introLetters, {
                 y: -16,
                 opacity: 0,
                 duration: HERO_CONFIG.intro.logoFadeDuration,
                 ease: 'power2.in',
+                stagger: HERO_CONFIG.intro.logoFadeStagger,
               })
               .to(introLogoLayer, {
                 scale: 1,
@@ -413,12 +427,26 @@ export default function FurfooScrollHero() {
           <div className="furfoo-scroll-hero__fallback" aria-hidden="true" />
 
           <div className="furfoo-scroll-hero__intro-logo-layer" ref={introLogoLayerRef}>
-            <img
-              src={HERO_CONFIG.introLogo}
-              alt="Furfoo — Where fur meets fortune"
-              onLoad={handleIntroLogoReady}
-              onError={handleIntroLogoError}
-            />
+            <div
+              className="furfoo-scroll-hero__intro-wordmark"
+              role="img"
+              aria-label="Furfoo — Where fur meets fortune"
+            >
+              {INTRO_LOGO_PARTS.map((part, index) => (
+                <span
+                  className="furfoo-scroll-hero__intro-letter"
+                  key={part.id}
+                  style={{ clipPath: part.clip }}
+                >
+                  <img
+                    src={HERO_CONFIG.introLogo}
+                    alt=""
+                    onLoad={index === 0 ? handleIntroLogoReady : undefined}
+                    onError={index === 0 ? handleIntroLogoError : undefined}
+                  />
+                </span>
+              ))}
+            </div>
           </div>
 
           {HERO_CONFIG.videos.map((video, index) => (
