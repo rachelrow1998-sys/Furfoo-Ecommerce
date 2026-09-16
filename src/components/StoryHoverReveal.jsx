@@ -17,34 +17,54 @@ const SETTLED_OPEN = 0.002
 // A tap on a touch screen holds the reveal open this long before it closes.
 const TAP_HOLD = 1100
 
-// The wake. Each link chases the one ahead of it, so the chain strings out when
-// the cursor moves and collapses back under the mask when it stops.
-const TRAIL_LINKS = 16
-// Each link lags its leader by roughly (1 - lead) / lead of the mask's speed,
-// so this has to stay low enough that the chain reaches past the mask's own
-// radius — otherwise the whole wake hides under the revealed circle.
-const TRAIL_LEAD = 0.18
+// The wake is drawn along the path the mask has actually travelled, kept as a
+// short history of its recent positions. A chain of springs was the obvious
+// build, but its length scales with speed — it curls into a blob when the
+// cursor crawls and would whip across the whole photo when it darts. Walking a
+// fixed distance back down the real path gives the same tail at any speed.
+const TRAIL_HISTORY = 48
+// Tail length and the floor below which there is nothing worth drawing, both in
+// mask diameters.
+const TRAIL_LENGTH = 2.1
+const TRAIL_MIN = 0.3
+// The path is redrawn at even steps this far apart rather than at the raw frame
+// positions. A frame's worth of travel is long enough that its round cap shows
+// as a scallop on the edge; resampling short keeps the outline smooth.
+const TRAIL_STEP = 9
+const TRAIL_MAX_POINTS = 512
 // Gap to the pointer, in px, at which the wake is at full strength.
-const TRAIL_FULL = 14
-// It strikes fast and lingers, rather than easing in and out symmetrically.
-const TRAIL_RISE = 0.45
-const TRAIL_FALL = 0.12
+const TRAIL_FULL = 9
+// It strikes fast and lingers, rather than easing in and out symmetrically, so
+// an ordinary sweep keeps one unbroken wake instead of flickering on and off.
+const TRAIL_RISE = 0.5
+const TRAIL_FALL = 0.07
 const SETTLED_HEAT = 0.004
-// Brand red, run hot at the head and deep at the tail, so the wake reads as a
-// gradient rather than one flat colour.
-const TRAIL_HEAD = [255, 150, 96]
+// Stroke width at the head, as a share of the mask's diameter, tapering to a
+// point at the tail.
+const TRAIL_WIDTH = 0.3
+const TRAIL_TAPER = 1
+// Brand red, run hot at the head and deep at the tail, so the wake carries a
+// gradient down its length instead of one flat colour.
+const TRAIL_HEAD = [255, 176, 122]
 const TRAIL_MID = [216, 42, 46]
-const TRAIL_TAIL = [130, 14, 26]
-// Sixteen links overlap, so each one stays well short of opaque. The fade is
-// deliberately slow off the head: the head rides under the mask, so a straight
-// linear ramp would leave only the faintest links showing.
-const TRAIL_ALPHA = 0.8
-const TRAIL_FADE_CURVE = 0.55
-// Link diameter as a share of the mask's, head to tail.
-const TRAIL_WIDEST = 0.62
-const TRAIL_NARROWEST = 0.14
+const TRAIL_TAIL = [124, 12, 28]
+const TRAIL_CORE_ALPHA = 0.9
+// A wider, fainter pass under the core, which is what gives it a glow rather
+// than a hard edge.
+const TRAIL_GLOW_ALPHA = 0.26
+const TRAIL_GLOW_WIDTH = 1.9
+// Retina is worth it on a stroke this thin; past 2x it is only cost.
+const MAX_DPR = 2
 
 const mix = (from, to, t) => from.map((channel, i) => Math.round(channel + (to[i] - channel) * t))
+
+// One ramp, head to tail, so neighbouring segments never step in colour.
+const trailColor = (t, alpha) => {
+  const [r, g, b] = t < 0.5
+    ? mix(TRAIL_HEAD, TRAIL_MID, t * 2)
+    : mix(TRAIL_MID, TRAIL_TAIL, (t - 0.5) * 2)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
 
 /**
  * Two photos shot on the same set, stacked in the same box. The second one is
@@ -57,10 +77,11 @@ const mix = (from, to, t) => from.map((channel, i) => Math.round(channel + (to[i
  * mask opens and closes on its own `mask-size` instead, so the photo is never
  * rasterised at anything but its natural scale.
  *
- * The wake sits under the mask, so it only shows where it reaches past the
- * revealed circle. Its links carry their colour and size from the start and
- * move on transforms alone, which keeps the per-frame work to transforms and
- * two opacities. The loop stops once everything has arrived.
+ * The wake is drawn on a canvas beneath the mask, as one tapering stroke down
+ * the path the mask has just travelled. Drawing it segment by segment with
+ * round joins, rather than as separate dots, is what keeps it continuous at
+ * speed, and running the colour ramp off distance along that path rather than
+ * off the segment index keeps the gradient even however the cursor moves.
  */
 export default function StoryHoverReveal({
   baseSrc,
@@ -73,26 +94,47 @@ export default function StoryHoverReveal({
   const frameRef = useRef(null)
   const lensRef = useRef(null)
   const innerRef = useRef(null)
-  const trailRef = useRef(null)
+  const canvasRef = useRef(null)
   const [active, setActive] = useState(false)
 
   useEffect(() => {
     const frame = frameRef.current
     const lens = lensRef.current
     const inner = innerRef.current
-    const trail = trailRef.current
+    const canvas = canvasRef.current
     if (!frame || !lens || !inner || !revealSrc) return undefined
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const context = canvas && !reduceMotion ? canvas.getContext('2d') : null
     // x/y is where the mask is, tx/ty where it is headed; open is the same pair
     // collapsed onto one axis for the opening animation, heat for the wake.
-    const state = { x: 0, y: 0, tx: 0, ty: 0, open: 0, openTarget: 0, heat: 0, half: 0 }
-    const sparks = trail && !reduceMotion ? Array.from(trail.children) : []
-    const links = sparks.map(() => ({ x: 0, y: 0, half: 0 }))
+    const state = { x: 0, y: 0, tx: 0, ty: 0, open: 0, openTarget: 0, heat: 0, half: 0, diameter: 0 }
+    // Ring buffer of recent mask positions, flat so nothing is allocated per
+    // frame. `head` is the next slot to write.
+    const history = new Float32Array(TRAIL_HISTORY * 2)
+    let historyCount = 0
+    let historyHead = 0
+
+    const rememberPoint = (x, y) => {
+      history[historyHead * 2] = x
+      history[historyHead * 2 + 1] = y
+      historyHead = (historyHead + 1) % TRAIL_HISTORY
+      if (historyCount < TRAIL_HISTORY) historyCount++
+    }
+
+    const forgetPath = () => {
+      historyCount = 0
+      historyHead = 0
+    }
+
+    // `back` counts from the newest point.
+    const pointX = (back) => history[((historyHead - 1 - back + TRAIL_HISTORY * 2) % TRAIL_HISTORY) * 2]
+    const pointY = (back) => history[((historyHead - 1 - back + TRAIL_HISTORY * 2) % TRAIL_HISTORY) * 2 + 1]
     let rect = frame.getBoundingClientRect()
     let frameId = 0
     let last = 0
     let holdTimer = 0
+    let painted = false
 
     const readRect = () => { rect = frame.getBoundingClientRect() }
 
@@ -100,29 +142,115 @@ export default function StoryHoverReveal({
       readRect()
       const diameter = Math.round(Math.max(rect.width, rect.height) * LENS_RATIO)
       state.half = diameter / 2
+      state.diameter = diameter
       frame.style.setProperty('--lens-size', `${diameter}px`)
       frame.style.setProperty('--frame-w', `${rect.width}px`)
       frame.style.setProperty('--frame-h', `${rect.height}px`)
 
-      sparks.forEach((spark, i) => {
-        const t = links.length > 1 ? i / (links.length - 1) : 0
-        const size = Math.round(diameter * (TRAIL_WIDEST + (TRAIL_NARROWEST - TRAIL_WIDEST) * t))
-        links[i].half = size / 2
-        spark.style.width = `${size}px`
-        spark.style.height = `${size}px`
-      })
+      if (!context) return
+      const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
+      canvas.width = Math.round(rect.width * dpr)
+      canvas.height = Math.round(rect.height * dpr)
+      canvas.style.width = `${rect.width}px`
+      canvas.style.height = `${rect.height}px`
+      context.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
 
-    // Colour and fade are fixed per link, so they are written once.
-    sparks.forEach((spark, i) => {
-      const t = links.length > 1 ? i / (links.length - 1) : 0
-      const [r, g, b] = t < 0.5
-        ? mix(TRAIL_HEAD, TRAIL_MID, t * 2)
-        : mix(TRAIL_MID, TRAIL_TAIL, (t - 0.5) * 2)
-      const alpha = TRAIL_ALPHA * Math.pow(1 - t, TRAIL_FADE_CURVE)
-      spark.style.backgroundImage = 'radial-gradient(circle closest-side, ' +
-        `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)}) 0%, rgba(${r}, ${g}, ${b}, 0) 72%)`
-    })
+    const clearTrail = () => {
+      if (!context || !painted) return
+      context.clearRect(0, 0, rect.width, rect.height)
+      painted = false
+    }
+
+    // Walk back down the travelled path, stopping at a fixed distance, and
+    // resample it at even steps so the taper changes gradually between points.
+    // Reused between frames; `path` holds x, y, distance triples.
+    const path = new Float32Array(TRAIL_MAX_POINTS * 3)
+    let pathPoints = 0
+
+    const addPoint = (x, y, distance) => {
+      if (pathPoints >= TRAIL_MAX_POINTS) return false
+      path[pathPoints * 3] = x
+      path[pathPoints * 3 + 1] = y
+      path[pathPoints * 3 + 2] = distance
+      pathPoints++
+      return true
+    }
+
+    const tracePath = () => {
+      pathPoints = 0
+      if (historyCount < 2) return 0
+
+      const limit = state.diameter * TRAIL_LENGTH
+      let previousX = pointX(0)
+      let previousY = pointY(0)
+      let walked = 0
+      let nextStep = TRAIL_STEP
+      addPoint(previousX, previousY, 0)
+
+      for (let back = 1; back < historyCount; back++) {
+        const x = pointX(back)
+        const y = pointY(back)
+        const span = Math.hypot(x - previousX, y - previousY)
+        // Frames where the cursor held still add no length, so they are skipped
+        // rather than piling duplicate points onto the stroke.
+        if (span < 0.01) continue
+
+        while (nextStep <= walked + span) {
+          const reach = Math.min(nextStep, limit)
+          const cut = (reach - walked) / span
+          if (!addPoint(previousX + (x - previousX) * cut, previousY + (y - previousY) * cut, reach)) {
+            return reach
+          }
+          if (reach >= limit) return limit
+          nextStep += TRAIL_STEP
+        }
+
+        walked += span
+        previousX = x
+        previousY = y
+      }
+
+      return walked
+    }
+
+    // Segment by segment, with round joins and a colour that moves a little
+    // each step, so the seams disappear into one stroke. Colour and taper come
+    // off distance along the path, which keeps the ramp even whatever the
+    // spacing of the underlying points.
+    const paintTrail = () => {
+      if (!context) return
+      const total = tracePath()
+      if (total < state.diameter * TRAIL_MIN || pathPoints < 2) {
+        clearTrail()
+        return
+      }
+
+      context.clearRect(0, 0, rect.width, rect.height)
+      context.lineCap = 'round'
+      context.lineJoin = 'round'
+
+      for (const pass of [
+        { width: TRAIL_GLOW_WIDTH, alpha: TRAIL_GLOW_ALPHA },
+        { width: 1, alpha: TRAIL_CORE_ALPHA },
+      ]) {
+        for (let i = 0; i < pathPoints - 1; i++) {
+          const t = path[i * 3 + 2] / total
+          const taper = Math.pow(1 - t, TRAIL_TAPER)
+          const width = state.diameter * TRAIL_WIDTH * taper * pass.width
+          if (width < 0.4) continue
+
+          context.beginPath()
+          context.moveTo(path[i * 3], path[i * 3 + 1])
+          context.lineTo(path[(i + 1) * 3], path[(i + 1) * 3 + 1])
+          context.lineWidth = width
+          context.strokeStyle = trailColor(t, pass.alpha * taper)
+          context.stroke()
+        }
+      }
+
+      painted = true
+    }
 
     const draw = (now) => {
       const delta = last ? Math.min(50, now - last) : 16.7
@@ -155,20 +283,13 @@ export default function StoryHoverReveal({
       state.heat += (heatTarget - state.heat) *
         step(heatTarget > state.heat ? TRAIL_RISE : TRAIL_FALL)
 
-      let leadX = state.x
-      let leadY = state.y
-      sparks.forEach((spark, i) => {
-        const link = links[i]
-        const chase = step(TRAIL_LEAD)
-        link.x += (leadX - link.x) * chase
-        link.y += (leadY - link.y) * chase
-        spark.style.transform =
-          `translate3d(${link.x - link.half}px, ${link.y - link.half}px, 0)`
-        leadX = link.x
-        leadY = link.y
-      })
-
-      if (trail) trail.style.opacity = `${(state.heat * state.open).toFixed(3)}`
+      if (context) {
+        rememberPoint(state.x, state.y)
+        const strength = state.heat * state.open
+        canvas.style.opacity = `${strength.toFixed(3)}`
+        if (strength > 0.002) paintTrail()
+        else clearTrail()
+      }
 
       const arrived = Math.abs(state.tx - state.x) < SETTLED_PX &&
         Math.abs(state.ty - state.y) < SETTLED_PX &&
@@ -182,6 +303,7 @@ export default function StoryHoverReveal({
         last = 0
         state.x = state.tx
         state.y = state.ty
+        clearTrail()
         if (state.openTarget === 0) setActive(false)
         return
       }
@@ -201,9 +323,9 @@ export default function StoryHoverReveal({
       if (snap) {
         state.x = state.tx
         state.y = state.ty
-        // Collapse the wake onto the pointer too, so re-entering somewhere else
-        // does not drag a streak across the photo.
-        links.forEach((link) => { link.x = state.tx; link.y = state.ty })
+        // Drop the travelled path too, so re-entering somewhere else does not
+        // drag a streak across the photo from wherever the cursor left.
+        forgetPath()
         state.heat = 0
       }
       run()
@@ -308,10 +430,7 @@ export default function StoryHoverReveal({
     />
 
     {revealSrc && <>
-      <div className="story-reveal__trail" ref={trailRef} aria-hidden="true">
-        {Array.from({ length: TRAIL_LINKS }, (_, i) =>
-          <span className="story-reveal__spark" key={i}/>)}
-      </div>
+      <canvas className="story-reveal__trail" ref={canvasRef} aria-hidden="true"/>
 
       <div className="story-reveal__lens" ref={lensRef} aria-hidden={!active}>
         <div className="story-reveal__lens-inner" ref={innerRef}>
