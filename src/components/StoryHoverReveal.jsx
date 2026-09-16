@@ -10,7 +10,7 @@ const OPEN = 0.13
 const CLOSE = 0.18
 // The head's diameter as a share of the longest edge of the frame. The mask is
 // the head and nothing else, so the mask box is exactly the reveal.
-const LENS_RATIO = 0.2
+const LENS_RATIO = 0.1
 // Below these the animation has arrived and the loop parks itself.
 const SETTLED_PX = 0.3
 const SETTLED_OPEN = 0.002
@@ -44,8 +44,9 @@ const SETTLED_HEAT = 0.004
 const TRAIL_WIDTH = 0.4
 const TRAIL_TAPER = 1
 // Brand red, run hot at the head and deep at the tail, so the wake carries a
-// gradient down its length instead of one flat colour.
-const TRAIL_HEAD = [255, 176, 122]
+// gradient down its length instead of one flat colour. The head is the light
+// end, but not so pale that it vanishes against a photo this bright.
+const TRAIL_HEAD = [255, 140, 96]
 const TRAIL_MID = [216, 42, 46]
 const TRAIL_TAIL = [124, 12, 28]
 const TRAIL_CORE_ALPHA = 0.9
@@ -53,8 +54,17 @@ const TRAIL_CORE_ALPHA = 0.9
 // than a hard edge.
 const TRAIL_GLOW_ALPHA = 0.26
 const TRAIL_GLOW_WIDTH = 1.9
+// The ring around the head, as multiples of its radius: clear through the
+// middle so the revealed cat is never tinted, rising to a band that sits just
+// outside the reveal's soft edge, then out to nothing.
+const HALO_CLEAR = 0.62
+const HALO_PEAK = 0.92
+const HALO_OUTER = 1.45
+const HALO_ALPHA = 0.8
 // Retina is worth it on a stroke this thin; past 2x it is only cost.
 const MAX_DPR = 2
+
+const TAU = Math.PI * 2
 
 const mix = (from, to, t) => from.map((channel, i) => Math.round(channel + (to[i] - channel) * t))
 
@@ -81,6 +91,10 @@ const trailColor = (t, alpha) => {
  * and the wake trailing off it is the tail. Leaving the tail to the wake is what
  * lets the mask stay a circle — a shape with no direction needs no aiming, so
  * the element never rotates and the photo inside never has to unwind a rotation.
+ *
+ * The wake wraps the head in a ring and runs off it into the tail, light at the
+ * head and deepening down its length. The ring is clear through the middle, so
+ * the cat showing through the reveal is never tinted; only the rim is coloured.
  *
  * The wake is drawn on a canvas beneath the mask, as one tapering stroke down
  * the path the mask has just travelled. Drawing it segment by segment with
@@ -219,38 +233,59 @@ export default function StoryHoverReveal({
       return walked
     }
 
+    // The ring that wraps the head. A radial fill rather than a stroke, so it
+    // can be clear across the reveal and only colour the rim.
+    const paintHalo = () => {
+      const radius = state.head / 2
+      const outer = radius * HALO_OUTER
+      const [r, g, b] = TRAIL_HEAD
+      const ring = context.createRadialGradient(state.x, state.y, 0, state.x, state.y, outer)
+      ring.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`)
+      ring.addColorStop(HALO_CLEAR / HALO_OUTER, `rgba(${r}, ${g}, ${b}, 0)`)
+      ring.addColorStop(HALO_PEAK / HALO_OUTER, `rgba(${r}, ${g}, ${b}, ${HALO_ALPHA})`)
+      ring.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+
+      context.fillStyle = ring
+      context.beginPath()
+      context.arc(state.x, state.y, outer, 0, TAU)
+      context.fill()
+    }
+
     // Segment by segment, with round joins and a colour that moves a little
     // each step, so the seams disappear into one stroke. Colour and taper come
     // off distance along the path, which keeps the ramp even whatever the
     // spacing of the underlying points.
+    //
+    // The ring belongs to the reveal and the tail to the motion, so the canvas
+    // carries only the open/close fade and the tail's own alpha carries the
+    // speed — otherwise the ring would blink out whenever the cursor rested.
     const paintTrail = () => {
       if (!context) return
-      const total = tracePath()
-      if (total < state.head * TRAIL_MIN || pathPoints < 2) {
-        clearTrail()
-        return
-      }
-
       context.clearRect(0, 0, rect.width, rect.height)
-      context.lineCap = 'round'
-      context.lineJoin = 'round'
+      paintHalo()
 
-      for (const pass of [
-        { width: TRAIL_GLOW_WIDTH, alpha: TRAIL_GLOW_ALPHA },
-        { width: 1, alpha: TRAIL_CORE_ALPHA },
-      ]) {
-        for (let i = 0; i < pathPoints - 1; i++) {
-          const t = path[i * 3 + 2] / total
-          const taper = Math.pow(1 - t, TRAIL_TAPER)
-          const width = state.head * TRAIL_WIDTH * taper * pass.width
-          if (width < 0.4) continue
+      const total = tracePath()
+      if (total >= state.head * TRAIL_MIN && pathPoints >= 2 && state.heat > 0.002) {
+        context.lineCap = 'round'
+        context.lineJoin = 'round'
 
-          context.beginPath()
-          context.moveTo(path[i * 3], path[i * 3 + 1])
-          context.lineTo(path[(i + 1) * 3], path[(i + 1) * 3 + 1])
-          context.lineWidth = width
-          context.strokeStyle = trailColor(t, pass.alpha * taper)
-          context.stroke()
+        for (const pass of [
+          { width: TRAIL_GLOW_WIDTH, alpha: TRAIL_GLOW_ALPHA },
+          { width: 1, alpha: TRAIL_CORE_ALPHA },
+        ]) {
+          for (let i = 0; i < pathPoints - 1; i++) {
+            const t = path[i * 3 + 2] / total
+            const taper = Math.pow(1 - t, TRAIL_TAPER)
+            const width = state.head * TRAIL_WIDTH * taper * pass.width
+            if (width < 0.4) continue
+
+            context.beginPath()
+            context.moveTo(path[i * 3], path[i * 3 + 1])
+            context.lineTo(path[(i + 1) * 3], path[(i + 1) * 3 + 1])
+            context.lineWidth = width
+            context.strokeStyle = trailColor(t, pass.alpha * taper * state.heat)
+            context.stroke()
+          }
         }
       }
 
@@ -290,9 +325,8 @@ export default function StoryHoverReveal({
 
       if (context) {
         rememberPoint(state.x, state.y)
-        const strength = state.heat * state.open
-        canvas.style.opacity = `${strength.toFixed(3)}`
-        if (strength > 0.002) paintTrail()
+        canvas.style.opacity = `${state.open.toFixed(3)}`
+        if (state.open > 0.002) paintTrail()
         else clearTrail()
       }
 
@@ -308,8 +342,12 @@ export default function StoryHoverReveal({
         last = 0
         state.x = state.tx
         state.y = state.ty
-        clearTrail()
-        if (state.openTarget === 0) setActive(false)
+        // A settled-but-open reveal keeps its ring: the canvas holds the last
+        // frame, and with the loop parked nothing repaints it.
+        if (state.openTarget === 0) {
+          clearTrail()
+          setActive(false)
+        }
         return
       }
 
