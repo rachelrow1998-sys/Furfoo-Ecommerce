@@ -29,21 +29,25 @@
 /* The mask. Fixed size and never scaled: it is translated to the pointer, and
    `mask-size` — driven from the script — is what opens and closes it.
 
-   The mask is just the head: a soft circle. The tadpole's tail is the wake
-   below, so the mask has no tail of its own to keep pointed anywhere, and with
-   nothing to aim there is nothing to rotate — the element only ever translates,
-   and the photo inside it only ever translates back. */
+   The mask is just the head: a soft ellipse, stretched along the line of travel
+   and turned to follow it, so the wake leaves from its narrow trailing end
+   rather than off the side of a circle. `ellipse closest-side` takes its two
+   radii from the element's own box, so the one gradient covers both axes and
+   `mask-size` still scales it whole. */
 .story-reveal__lens {
   position: absolute;
   top: 0;
   left: 0;
-  width: var(--lens-size, 60%);
-  height: var(--lens-size, 60%);
+  width: var(--lens-w, 60%);
+  height: var(--lens-h, 60%);
   opacity: 0;
   visibility: hidden;
   will-change: transform;
-  -webkit-mask-image: radial-gradient(circle closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
-  mask-image: radial-gradient(circle closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
+  /* Load-bearing: the reveal is centred here, so turning about the centre
+     swings the trailing end without moving what is under the cursor. */
+  transform-origin: center;
+  -webkit-mask-image: radial-gradient(ellipse closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
+  mask-image: radial-gradient(ellipse closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
   /* The mask grows out of the middle of this box, which sits under the pointer. */
   -webkit-mask-position: center;
   mask-position: center;
@@ -73,13 +77,20 @@
 }
 
 
-/* Carries the opposite translation to the mask, which is what keeps the cat
-   lined up with the dog underneath it. Its box is the frame, not the mask. */
+/* Carries the exact inverse of the mask's transform, which is what keeps the
+   cat lined up with the dog underneath it. Its box is the frame, not the mask,
+   so the origin has to be named: it must be the same point the mask turns
+   about, or the rotations cancel around different centres and the photo slides.
+
+   No `will-change` here on purpose. Promoting this to its own layer would have
+   it rasterised under its own rotation and then rotated again by the mask's
+   layer, resampling the photo twice; left alone the two transforms compose into
+   one matrix, which for equal and opposite rotations is the identity. */
 .story-reveal__lens-inner {
   position: absolute;
   top: 0;
   left: 0;
   width: var(--frame-w, 100%);
   height: var(--frame-h, 100%);
-  will-change: transform;
+  transform-origin: calc(var(--lens-w, 0px) / 2) calc(var(--lens-h, 0px) / 2);
 }

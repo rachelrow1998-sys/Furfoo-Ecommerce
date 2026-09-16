@@ -8,9 +8,17 @@ const FOLLOW = 0.17
 // frame settles back to the dog without lingering.
 const OPEN = 0.13
 const CLOSE = 0.18
-// The head's diameter as a share of the longest edge of the frame. The mask is
-// the head and nothing else, so the mask box is exactly the reveal.
+// The head's short axis as a share of the longest edge of the frame. The mask
+// is the head and nothing else, so the mask box is exactly the reveal.
 const LENS_RATIO = 0.1
+// How much longer the head is along the line of travel than across it. A circle
+// meets its tail at the side of a curve, which is the join that reads wrong;
+// stretched, the wake leaves from the narrow trailing end.
+const HEAD_STRETCH = 1.45
+// Below this much travel in a frame the heading is left alone, so the head does
+// not swing on the jitter of an almost-still cursor.
+const HEADING_MIN = 0.5
+const HEADING_TURN = 0.16
 // Below these the animation has arrived and the loop parks itself.
 const SETTLED_PX = 0.3
 const SETTLED_OPEN = 0.002
@@ -87,10 +95,12 @@ const trailColor = (t, alpha) => {
  * mask opens and closes on its own `mask-size` instead, so the photo is never
  * rasterised at anything but its natural scale.
  *
- * Together the mask and the wake read as a tadpole: the mask is the round head,
- * and the wake trailing off it is the tail. Leaving the tail to the wake is what
- * lets the mask stay a circle — a shape with no direction needs no aiming, so
- * the element never rotates and the photo inside never has to unwind a rotation.
+ * Together the mask and the wake read as a tadpole: the mask is the head, and
+ * the wake trailing off it is the tail. The head is an ellipse stretched along
+ * the line of travel and turned to follow it, so the tail leaves from its narrow
+ * trailing end rather than off the side of a circle. Turning it means the photo
+ * inside carries the inverse rotation as well as the inverse translation, about
+ * the same origin.
  *
  * The wake wraps the head in a ring and runs off it into the tail, light at the
  * head and deepening down its length. The ring is clear through the middle, so
@@ -127,7 +137,16 @@ export default function StoryHoverReveal({
     const context = canvas && !reduceMotion ? canvas.getContext('2d') : null
     // x/y is where the mask is, tx/ty where it is headed; open is the same pair
     // collapsed onto one axis for the opening animation, heat for the wake.
-    const state = { x: 0, y: 0, tx: 0, ty: 0, open: 0, openTarget: 0, heat: 0, half: 0, head: 0 }
+    // `angle` is where the head's trailing end points — behind the motion —
+    // eased as an angle. Easing it as a unit vector instead looks equivalent and
+    // is not: on an exact reversal the lerp passes through the zero vector, and
+    // renormalising a vector a hair short of the old heading puts it straight
+    // back, so the head sticks and never turns round.
+    const state = {
+      x: 0, y: 0, tx: 0, ty: 0, lastX: 0, lastY: 0,
+      open: 0, openTarget: 0, heat: 0,
+      halfW: 0, halfH: 0, head: 0, angle: Math.PI,
+    }
     // Ring buffer of recent mask positions, flat so nothing is allocated per
     // frame. `head` is the next slot to write.
     const history = new Float32Array(TRAIL_HISTORY * 2)
@@ -159,10 +178,13 @@ export default function StoryHoverReveal({
 
     const measure = () => {
       readRect()
-      const diameter = Math.round(Math.max(rect.width, rect.height) * LENS_RATIO)
-      state.half = diameter / 2
-      state.head = diameter
-      frame.style.setProperty('--lens-size', `${diameter}px`)
+      const short = Math.round(Math.max(rect.width, rect.height) * LENS_RATIO)
+      const long = Math.round(short * HEAD_STRETCH)
+      state.halfW = long / 2
+      state.halfH = short / 2
+      state.head = short
+      frame.style.setProperty('--lens-w', `${long}px`)
+      frame.style.setProperty('--lens-h', `${short}px`)
       frame.style.setProperty('--frame-w', `${rect.width}px`)
       frame.style.setProperty('--frame-h', `${rect.height}px`)
 
@@ -235,11 +257,19 @@ export default function StoryHoverReveal({
 
     // The ring that wraps the head. A radial fill rather than a stroke, so it
     // can be clear across the reveal and only colour the rim.
-    const paintHalo = () => {
-      const radius = state.head / 2
+    const paintHalo = (angle) => {
+      const radius = state.halfH
       const outer = radius * HALO_OUTER
       const [r, g, b] = TRAIL_HEAD
-      const ring = context.createRadialGradient(state.x, state.y, 0, state.x, state.y, outer)
+
+      // Drawn as a circle in a space that is turned and stretched to match the
+      // head, so the ring hugs the ellipse instead of sitting round it.
+      context.save()
+      context.translate(state.x, state.y)
+      context.rotate(angle)
+      context.scale(HEAD_STRETCH, 1)
+
+      const ring = context.createRadialGradient(0, 0, 0, 0, 0, outer)
       ring.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`)
       ring.addColorStop(HALO_CLEAR / HALO_OUTER, `rgba(${r}, ${g}, ${b}, 0)`)
       ring.addColorStop(HALO_PEAK / HALO_OUTER, `rgba(${r}, ${g}, ${b}, ${HALO_ALPHA})`)
@@ -247,8 +277,9 @@ export default function StoryHoverReveal({
 
       context.fillStyle = ring
       context.beginPath()
-      context.arc(state.x, state.y, outer, 0, TAU)
+      context.arc(0, 0, outer, 0, TAU)
       context.fill()
+      context.restore()
     }
 
     // Segment by segment, with round joins and a colour that moves a little
@@ -259,10 +290,10 @@ export default function StoryHoverReveal({
     // The ring belongs to the reveal and the tail to the motion, so the canvas
     // carries only the open/close fade and the tail's own alpha carries the
     // speed — otherwise the ring would blink out whenever the cursor rested.
-    const paintTrail = () => {
+    const paintTrail = (angle) => {
       if (!context) return
       context.clearRect(0, 0, rect.width, rect.height)
-      paintHalo()
+      paintHalo(angle)
 
       const total = tracePath()
       if (total >= state.head * TRAIL_MIN && pathPoints >= 2 && state.heat > 0.002) {
@@ -304,18 +335,33 @@ export default function StoryHoverReveal({
       state.y += (state.ty - state.y) * lerp
       state.open += (state.openTarget - state.open) * step(state.openTarget > state.open ? OPEN : CLOSE)
 
-      const left = state.x - state.half
-      const top = state.y - state.half
+      const movedX = state.x - state.lastX
+      const movedY = state.y - state.lastY
+      const moved = Math.hypot(movedX, movedY)
+      if (moved > HEADING_MIN) {
+        const target = Math.atan2(-movedY, -movedX)
+        // Wrapped into [-pi, pi] so the head always swings the short way round.
+        let delta = target - state.angle
+        delta -= TAU * Math.floor((delta + Math.PI) / TAU)
+        state.angle += delta * step(HEADING_TURN)
+      }
+      state.lastX = state.x
+      state.lastY = state.y
+      const angle = state.angle
+
+      const left = state.x - state.halfW
+      const top = state.y - state.halfH
       const size = `${(state.open * 100).toFixed(2)}%`
 
-      lens.style.transform = `translate3d(${left}px, ${top}px, 0)`
+      lens.style.transform = `translate3d(${left}px, ${top}px, 0) rotate(${angle}rad)`
       lens.style.maskSize = `${size} ${size}`
       lens.style.webkitMaskSize = `${size} ${size}`
       // A percentage mask is degenerate at the very bottom of its range, so the
       // first sliver of the opening rides in on opacity instead.
       lens.style.opacity = `${Math.min(1, state.open * 8)}`
-      // Exactly the opposite move: the cat stays welded to the frame.
-      inner.style.transform = `translate3d(${-left}px, ${-top}px, 0)`
+      // Exactly the opposite move, in the opposite order, about the same origin:
+      // the two compose to the identity and the cat stays welded to the frame.
+      inner.style.transform = `rotate(${-angle}rad) translate3d(${-left}px, ${-top}px, 0)`
 
       // The gap to the pointer stands in for speed — with a fixed lerp the two
       // are proportional — so the wake only shows while the cursor is moving.
@@ -326,7 +372,7 @@ export default function StoryHoverReveal({
       if (context) {
         rememberPoint(state.x, state.y)
         canvas.style.opacity = `${state.open.toFixed(3)}`
-        if (state.open > 0.002) paintTrail()
+        if (state.open > 0.002) paintTrail(angle)
         else clearTrail()
       }
 
@@ -342,6 +388,8 @@ export default function StoryHoverReveal({
         last = 0
         state.x = state.tx
         state.y = state.ty
+        state.lastX = state.tx
+        state.lastY = state.ty
         // A settled-but-open reveal keeps its ring: the canvas holds the last
         // frame, and with the loop parked nothing repaints it.
         if (state.openTarget === 0) {
@@ -366,6 +414,8 @@ export default function StoryHoverReveal({
       if (snap) {
         state.x = state.tx
         state.y = state.ty
+        state.lastX = state.tx
+        state.lastY = state.ty
         // Drop the travelled path too, so re-entering somewhere else does not
         // drag a streak across the photo from wherever the cursor left.
         forgetPath()
