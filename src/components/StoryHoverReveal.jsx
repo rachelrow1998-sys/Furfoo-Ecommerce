@@ -8,18 +8,9 @@ const FOLLOW = 0.17
 // frame settles back to the dog without lingering.
 const OPEN = 0.13
 const CLOSE = 0.18
-// Mask box as a share of the longest edge of the frame. The box is not the
-// reveal: the tadpole's head sits at its centre, and the box has to be wide
-// enough to hold the tail on one side and, since the head is centred, the same
-// empty run on the other.
-const LENS_RATIO = 0.75
-// The head's diameter as a share of that box. Must match the generated shape —
-// everything sized against the reveal is measured off the head, not the box.
-const MASK_HEAD = 0.34
-// Below this much travel in a frame the heading is left alone, so the tail does
-// not swing on the jitter of an almost-still cursor.
-const HEADING_MIN = 0.5
-const HEADING_TURN = 0.16
+// The head's diameter as a share of the longest edge of the frame. The mask is
+// the head and nothing else, so the mask box is exactly the reveal.
+const LENS_RATIO = 0.2
 // Below these the animation has arrived and the loop parks itself.
 const SETTLED_PX = 0.3
 const SETTLED_OPEN = 0.002
@@ -50,7 +41,7 @@ const TRAIL_FALL = 0.07
 const SETTLED_HEAT = 0.004
 // Stroke width at the head, as a share of the mask's diameter, tapering to a
 // point at the tail.
-const TRAIL_WIDTH = 0.34
+const TRAIL_WIDTH = 0.4
 const TRAIL_TAPER = 1
 // Brand red, run hot at the head and deep at the tail, so the wake carries a
 // gradient down its length instead of one flat colour.
@@ -64,8 +55,6 @@ const TRAIL_GLOW_ALPHA = 0.26
 const TRAIL_GLOW_WIDTH = 1.9
 // Retina is worth it on a stroke this thin; past 2x it is only cost.
 const MAX_DPR = 2
-
-const TAU = Math.PI * 2
 
 const mix = (from, to, t) => from.map((channel, i) => Math.round(channel + (to[i] - channel) * t))
 
@@ -88,9 +77,10 @@ const trailColor = (t, alpha) => {
  * mask opens and closes on its own `mask-size` instead, so the photo is never
  * rasterised at anything but its natural scale.
  *
- * The mask is a tadpole rather than a circle, and turns to keep its tail behind
- * the direction of travel. Rotating it means the photo inside has to carry the
- * inverse rotation as well as the inverse translation, about the same origin.
+ * Together the mask and the wake read as a tadpole: the mask is the round head,
+ * and the wake trailing off it is the tail. Leaving the tail to the wake is what
+ * lets the mask stay a circle — a shape with no direction needs no aiming, so
+ * the element never rotates and the photo inside never has to unwind a rotation.
  *
  * The wake is drawn on a canvas beneath the mask, as one tapering stroke down
  * the path the mask has just travelled. Drawing it segment by segment with
@@ -123,16 +113,7 @@ export default function StoryHoverReveal({
     const context = canvas && !reduceMotion ? canvas.getContext('2d') : null
     // x/y is where the mask is, tx/ty where it is headed; open is the same pair
     // collapsed onto one axis for the opening animation, heat for the wake.
-    // `angle` is where the tail lies — behind the motion — eased towards the
-    // heading as an angle. Easing it as a unit vector instead looks equivalent
-    // and is not: on an exact reversal the lerp passes through the zero vector,
-    // and renormalising a vector that is a hair short of the old heading puts
-    // it straight back, so the tail sticks and never turns round.
-    const state = {
-      x: 0, y: 0, tx: 0, ty: 0, lastX: 0, lastY: 0,
-      open: 0, openTarget: 0, heat: 0,
-      half: 0, head: 0, angle: Math.PI,
-    }
+    const state = { x: 0, y: 0, tx: 0, ty: 0, open: 0, openTarget: 0, heat: 0, half: 0, head: 0 }
     // Ring buffer of recent mask positions, flat so nothing is allocated per
     // frame. `head` is the next slot to write.
     const history = new Float32Array(TRAIL_HISTORY * 2)
@@ -166,7 +147,7 @@ export default function StoryHoverReveal({
       readRect()
       const diameter = Math.round(Math.max(rect.width, rect.height) * LENS_RATIO)
       state.half = diameter / 2
-      state.head = diameter * MASK_HEAD
+      state.head = diameter
       frame.style.setProperty('--lens-size', `${diameter}px`)
       frame.style.setProperty('--frame-w', `${rect.width}px`)
       frame.style.setProperty('--frame-h', `${rect.height}px`)
@@ -288,33 +269,18 @@ export default function StoryHoverReveal({
       state.y += (state.ty - state.y) * lerp
       state.open += (state.openTarget - state.open) * step(state.openTarget > state.open ? OPEN : CLOSE)
 
-      const movedX = state.x - state.lastX
-      const movedY = state.y - state.lastY
-      const moved = Math.hypot(movedX, movedY)
-      if (moved > HEADING_MIN) {
-        const target = Math.atan2(-movedY, -movedX)
-        // Wrapped into [-pi, pi] so the tail always swings the short way round.
-        let delta = target - state.angle
-        delta -= TAU * Math.floor((delta + Math.PI) / TAU)
-        state.angle += delta * step(HEADING_TURN)
-      }
-      state.lastX = state.x
-      state.lastY = state.y
-      const angle = state.angle
-
       const left = state.x - state.half
       const top = state.y - state.half
       const size = `${(state.open * 100).toFixed(2)}%`
 
-      lens.style.transform = `translate3d(${left}px, ${top}px, 0) rotate(${angle}rad)`
+      lens.style.transform = `translate3d(${left}px, ${top}px, 0)`
       lens.style.maskSize = `${size} ${size}`
       lens.style.webkitMaskSize = `${size} ${size}`
       // A percentage mask is degenerate at the very bottom of its range, so the
       // first sliver of the opening rides in on opacity instead.
       lens.style.opacity = `${Math.min(1, state.open * 8)}`
-      // Exactly the opposite move, in the opposite order, about the same origin:
-      // the two compose to the identity and the cat stays welded to the frame.
-      inner.style.transform = `rotate(${-angle}rad) translate3d(${-left}px, ${-top}px, 0)`
+      // Exactly the opposite move: the cat stays welded to the frame.
+      inner.style.transform = `translate3d(${-left}px, ${-top}px, 0)`
 
       // The gap to the pointer stands in for speed — with a fixed lerp the two
       // are proportional — so the wake only shows while the cursor is moving.
@@ -362,8 +328,6 @@ export default function StoryHoverReveal({
       if (snap) {
         state.x = state.tx
         state.y = state.ty
-        state.lastX = state.tx
-        state.lastY = state.ty
         // Drop the travelled path too, so re-entering somewhere else does not
         // drag a streak across the photo from wherever the cursor left.
         forgetPath()
