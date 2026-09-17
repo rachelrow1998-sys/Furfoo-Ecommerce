@@ -1,14 +1,20 @@
 /**
  * A stand-in for the Furfoo POS, for tests.
  *
- * It copies the three behaviours the storefront depends on: session login,
- * the product list with live stock, and an online order that deducts stock and
- * deduplicates on externalOrderKey.
+ * It copies the four behaviours the storefront depends on: session login, the
+ * product list with live stock, an online order that deducts stock and
+ * deduplicates on externalOrderKey, and serving product photos from
+ * /uploads/products/ without a session - which is how the real POS publishes an
+ * uploaded photo, and is what lets the website link to it directly.
  */
 
 import { createServer } from "node:http";
+import { existsSync, readFileSync } from "node:fs";
+import { basename, extname, join } from "node:path";
 
-export function startFakePos({ username = "web", password = "secret", products = [] } = {}) {
+const imageTypes = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp" };
+
+export function startFakePos({ username = "web", password = "secret", products = [], uploadDir = "" } = {}) {
   const state = {
     products: new Map(products.map((product) => [product.sku, { ...product }])),
     sessions: new Set(),
@@ -32,6 +38,20 @@ export function startFakePos({ username = "web", password = "secret", products =
 
   const server = createServer(async (request, response) => {
     const url = new URL(request.url, "http://localhost");
+
+    // Product photos are public on the real POS: no session, no CORS dance.
+    if (request.method === "GET" && url.pathname.startsWith("/uploads/products/")) {
+      const name = basename(decodeURIComponent(url.pathname));
+      const file = uploadDir ? join(uploadDir, name) : "";
+      const type = imageTypes[extname(name).toLowerCase()];
+      if (!file || !type || !existsSync(file)) {
+        response.writeHead(404, { "content-type": "text/plain" });
+        return response.end("Not found");
+      }
+      response.writeHead(200, { "content-type": type, "cache-control": "public, max-age=60" });
+      return response.end(readFileSync(file));
+    }
+
     const cookie = String(request.headers.cookie || "");
     const token = cookie.match(/furfoo_session=([^;]+)/)?.[1];
     const signedIn = token && state.sessions.has(token);
