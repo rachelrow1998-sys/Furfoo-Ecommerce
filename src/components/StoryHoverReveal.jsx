@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { SHAPE } from './storyRevealShape'
 import './StoryHoverReveal.css'
 
 // Share of the gap to the pointer the mask closes each 60fps frame. Low enough
@@ -10,11 +11,8 @@ const OPEN = 0.13
 const CLOSE = 0.18
 // The head's short axis as a share of the longest edge of the frame. The mask
 // is the head and nothing else, so the mask box is exactly the reveal.
-const LENS_RATIO = 0.1
-// How much longer the head is along the line of travel than across it. A circle
-// meets its tail at the side of a curve, which is the join that reads wrong;
-// stretched, the wake leaves from the narrow trailing end.
-const HEAD_STRETCH = 1.45
+const LENS_RATIO = 0.135
+
 // Below this much travel in a frame the heading is left alone, so the head does
 // not swing on the jitter of an almost-still cursor.
 const HEADING_MIN = 0.5
@@ -33,7 +31,11 @@ const TAP_HOLD = 1100
 const TRAIL_HISTORY = 48
 // Tail length and the floor below which there is nothing worth drawing, both in
 // mask diameters.
-const TRAIL_LENGTH = 2.6
+// How far the tail reaches past the body's trailing end, in body thicknesses.
+// Measured from the end rather than from the centre: the body is several
+// thicknesses long, so a tail sized against thickness alone stayed hidden
+// underneath it entirely.
+const TRAIL_BEYOND = 2.2
 const TRAIL_MIN = 0.35
 // The path is redrawn at even steps this far apart rather than at the raw frame
 // positions. A frame's worth of travel is long enough that its round cap shows
@@ -62,13 +64,15 @@ const TRAIL_CORE_ALPHA = 0.9
 // than a hard edge.
 const TRAIL_GLOW_ALPHA = 0.26
 const TRAIL_GLOW_WIDTH = 1.9
-// The ring around the head, as multiples of its radius: clear through the
-// middle so the revealed cat is never tinted, rising to a band that sits just
-// outside the reveal's soft edge, then out to nothing.
-const HALO_CLEAR = 0.62
-const HALO_PEAK = 0.92
-const HALO_OUTER = 1.45
-const HALO_ALPHA = 0.8
+// The ring, as strokes laid along the silhouette: width in blob thicknesses,
+// and alpha. Wide and faint through to narrow and strong, which reads as one
+// soft band. Centred on the outline, so the inner half falls under the reveal
+// and never tints the cat showing through — only the outer half is seen.
+const HALO_PASSES = [
+  { width: 0.7, alpha: 0.16 },
+  { width: 0.42, alpha: 0.32 },
+  { width: 0.22, alpha: 0.7 },
+]
 // Retina is worth it on a stroke this thin; past 2x it is only cost.
 const MAX_DPR = 2
 
@@ -96,11 +100,10 @@ const trailColor = (t, alpha) => {
  * rasterised at anything but its natural scale.
  *
  * Together the mask and the wake read as a tadpole: the mask is the head, and
- * the wake trailing off it is the tail. The head is an ellipse stretched along
- * the line of travel and turned to follow it, so the tail leaves from its narrow
- * trailing end rather than off the side of a circle. Turning it means the photo
- * inside carries the inverse rotation as well as the inverse translation, about
- * the same origin.
+ * the wake trailing off it is the tail. The head is a stretched droplet, from
+ * storyRevealShape, turned to follow the line of travel so the tail leaves from
+ * its trailing end. Turning it means the photo inside carries the inverse
+ * rotation as well as the inverse translation, about the same origin.
  *
  * The wake wraps the head in a ring and runs off it into the tail, light at the
  * head and deepening down its length. The ring is clear through the middle, so
@@ -179,10 +182,12 @@ export default function StoryHoverReveal({
     const measure = () => {
       readRect()
       const short = Math.round(Math.max(rect.width, rect.height) * LENS_RATIO)
-      const long = Math.round(short * HEAD_STRETCH)
+      const long = Math.round(short * SHAPE.boxAspect)
       state.halfW = long / 2
       state.halfH = short / 2
-      state.head = short
+      // The blob does not fill its tile — it is inset so the feather has room —
+      // so everything sized against the reveal uses the blob, not the box.
+      state.head = short * SHAPE.thickness
       frame.style.setProperty('--lens-w', `${long}px`)
       frame.style.setProperty('--lens-h', `${short}px`)
       frame.style.setProperty('--frame-w', `${rect.width}px`)
@@ -222,7 +227,7 @@ export default function StoryHoverReveal({
       pathPoints = 0
       if (historyCount < 2) return 0
 
-      const limit = state.head * TRAIL_LENGTH
+      const limit = state.halfW + state.head * TRAIL_BEYOND
       let previousX = pointX(0)
       let previousY = pointY(0)
       let walked = 0
@@ -258,27 +263,29 @@ export default function StoryHoverReveal({
     // The ring that wraps the head. A radial fill rather than a stroke, so it
     // can be clear across the reveal and only colour the rim.
     const paintHalo = (angle) => {
-      const radius = state.halfH
-      const outer = radius * HALO_OUTER
       const [r, g, b] = TRAIL_HEAD
 
-      // Drawn as a circle in a space that is turned and stretched to match the
-      // head, so the ring hugs the ellipse instead of sitting round it.
+      // Drawn in a space translated, turned and scaled to the head, so the
+      // outline can be walked in its own unit coordinates.
       context.save()
       context.translate(state.x, state.y)
       context.rotate(angle)
-      context.scale(HEAD_STRETCH, 1)
+      context.scale(state.head, state.head)
 
-      const ring = context.createRadialGradient(0, 0, 0, 0, 0, outer)
-      ring.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`)
-      ring.addColorStop(HALO_CLEAR / HALO_OUTER, `rgba(${r}, ${g}, ${b}, 0)`)
-      ring.addColorStop(HALO_PEAK / HALO_OUTER, `rgba(${r}, ${g}, ${b}, ${HALO_ALPHA})`)
-      ring.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
-
-      context.fillStyle = ring
       context.beginPath()
-      context.arc(0, 0, outer, 0, TAU)
-      context.fill()
+      SHAPE.outline.forEach(([x, y], i) => {
+        if (i === 0) context.moveTo(x, y)
+        else context.lineTo(x, y)
+      })
+      context.closePath()
+
+      context.lineJoin = 'round'
+      for (const pass of HALO_PASSES) {
+        // Line widths are in the scaled space too, so they are thicknesses.
+        context.lineWidth = pass.width
+        context.strokeStyle = `rgba(${r}, ${g}, ${b}, ${pass.alpha})`
+        context.stroke()
+      }
       context.restore()
     }
 
@@ -476,6 +483,11 @@ export default function StoryHoverReveal({
     const onScroll = () => {
       if (state.openTarget || state.open > SETTLED_OPEN) readRect()
     }
+
+    // One shape for the mask and the ring; set once, since mask-size does the
+    // scaling and mask-position keeps it centred.
+    lens.style.maskImage = SHAPE.mask
+    lens.style.webkitMaskImage = SHAPE.mask
 
     measure()
 

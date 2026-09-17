@@ -29,11 +29,10 @@
 /* The mask. Fixed size and never scaled: it is translated to the pointer, and
    `mask-size` — driven from the script — is what opens and closes it.
 
-   The mask is just the head: a soft ellipse, stretched along the line of travel
-   and turned to follow it, so the wake leaves from its narrow trailing end
-   rather than off the side of a circle. `ellipse closest-side` takes its two
-   radii from the element's own box, so the one gradient covers both axes and
-   `mask-size` still scales it whole. */
+   The mask is just the head: a stretched droplet, turned to follow the line of
+   travel so the wake leaves from its trailing end. The silhouette comes from
+   storyRevealShape, which also draws the ring hugging it, and is set on this
+   element from the script — it is one shape, so it has one source. */
 .story-reveal__lens {
   position: absolute;
   top: 0;
@@ -46,8 +45,6 @@
   /* Load-bearing: the reveal is centred here, so turning about the centre
      swings the trailing end without moving what is under the cursor. */
   transform-origin: center;
-  -webkit-mask-image: radial-gradient(ellipse closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
-  mask-image: radial-gradient(ellipse closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
   /* The mask grows out of the middle of this box, which sits under the pointer. */
   -webkit-mask-position: center;
   mask-position: center;
