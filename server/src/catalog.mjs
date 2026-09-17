@@ -3,8 +3,10 @@
  *
  * The POS holds one row per SKU with price, stock, status and photo. The shop
  * needs the same rows minus anything a customer should not see: hidden or
- * inactive products, internal SKUs, and (already stripped by the POS for a
- * non-admin role) cost and wholesale prices.
+ * inactive products, internal SKUs, the staff notes field - which carries
+ * remarks like "missing MYR/SGD selling price", written for the shop and not
+ * for a customer - and (already stripped by the POS for a non-admin role) cost
+ * and wholesale prices.
  *
  * Reads are cached for POS_CATALOG_TTL_MS so browsing the shop does not hit the
  * POS once per page view. Checkout never uses the cache: it re-reads stock from
@@ -24,10 +26,45 @@ export function slugify(value) {
     .slice(0, 80);
 }
 
-function categoryLabel(category) {
-  const clean = String(category || "").trim();
+/**
+ * The POS stores a category as either a short code (`trt`, `hb`) or its long
+ * form (`handmade_pet_treats`, `herbal_bath`), depending on how the product was
+ * created. Both are folded to one id here, so two products in the same
+ * category never end up on two different shelves, and both get the name the POS
+ * itself shows rather than "Trt".
+ */
+const CATEGORY_IDS = {
+  hb: "herbal_bath",
+  sh: "shampoo",
+  sp: "spray",
+  bdl: "bundle",
+  sachet: "botanical_sachet",
+  trt: "handmade_pet_treats",
+  care: "ear_wash"
+};
+
+const CATEGORY_LABELS = {
+  handmade_pet_treats: "Handmade Treats",
+  herbal_bath: "Herbal Bath",
+  botanical_sachet: "Botanical Sachet",
+  shampoo: "Shampoo",
+  spray: "Spray",
+  ear_wash: "Ear Care",
+  bundle: "Bundle"
+};
+
+export function categoryId(category, isBundle = false) {
+  if (isBundle) return "bundle";
+  const clean = String(category || "").trim().toLowerCase();
   if (!clean) return "";
-  return clean
+  return CATEGORY_IDS[clean] || clean;
+}
+
+function categoryLabel(category, isBundle = false) {
+  const id = categoryId(category, isBundle);
+  if (!id) return "";
+  if (CATEGORY_LABELS[id]) return CATEGORY_LABELS[id];
+  return id
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim()
@@ -64,13 +101,14 @@ function isPublished(product) {
 function toStorefrontProduct(product) {
   const priceCents = Number(product.priceCents || 0);
   const stockQty = Math.max(Number(product.stockQty || 0), 0);
+  const bundle = Boolean(Number(product.isBundle || 0));
   const lowStockThreshold = Number(product.lowStockThreshold || 0);
   return {
     sku: String(product.sku),
     slug: slugify(product.name) || slugify(product.sku),
     name: String(product.name || product.sku),
-    category: String(product.category || ""),
-    categoryLabel: categoryLabel(product.category),
+    category: categoryId(product.category, bundle),
+    categoryLabel: categoryLabel(product.category, bundle),
     priceCents,
     price: Number((priceCents / 100).toFixed(2)),
     currency: config.payments.currency,
@@ -79,8 +117,7 @@ function toStorefrontProduct(product) {
     stockQty,
     inStock: stockQty > 0,
     lowStock: stockQty > 0 && lowStockThreshold > 0 && stockQty <= lowStockThreshold,
-    isBundle: Boolean(Number(product.isBundle || 0)),
-    notes: String(product.notes || "")
+    isBundle: bundle
   };
 }
 

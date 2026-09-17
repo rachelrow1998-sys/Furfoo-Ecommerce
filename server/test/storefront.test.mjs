@@ -18,8 +18,11 @@ import { startFakePos } from "./fake-pos.mjs";
 const workDir = mkdtempSync(join(tmpdir(), "furfoo-storefront-"));
 
 const posProducts = [
-  { sku: "FF-TRT-BEEF-CHIP-50", name: "Beef Chips", category: "handmade_pet_treats", stockQty: 5, priceCents: 1900, lowStockThreshold: 5, imageUrl: "/uploads/products/beef-chips.jpg", productStatus: "active", isBundle: 0 },
+  { sku: "FF-TRT-BEEF-CHIP-50", name: "Beef Chips", category: "handmade_pet_treats", stockQty: 5, priceCents: 1900, lowStockThreshold: 5, imageUrl: "/uploads/products/beef-chips.jpg", productStatus: "active", isBundle: 0, notes: "Market treats product; missing MYR/SGD selling price" },
   { sku: "FF-HB-ZEN-CALM-25", name: "Herbal Bath - Zen Calm 25g", category: "herbal_bath", stockQty: 0, priceCents: 1490, lowStockThreshold: 3, imageUrl: "https://cdn.example.com/zen.webp", productStatus: "active", isBundle: 0 },
+  // The POS writes this category as the short code, not the long form.
+  { sku: "FF-SP-AC-100", name: "Spray - Aroma Care 100ml", category: "sp", stockQty: 4, priceCents: 2990, lowStockThreshold: 2, imageUrl: "", productStatus: "active", isBundle: 0 },
+  { sku: "FF-TRT-DUCK-JERKY", name: "Duck Jerky 50g", category: "trt", stockQty: 7, priceCents: 1990, lowStockThreshold: 3, imageUrl: "", productStatus: "active", isBundle: 0 },
   { sku: "FF-OLD-HIDDEN", name: "Retired Item", category: "", stockQty: 3, priceCents: 900, productStatus: "inactive", isBundle: 0 },
   { sku: "FF-FREEBIE", name: "Sample", category: "", stockQty: 3, priceCents: 0, productStatus: "active", isBundle: 0 }
 ];
@@ -84,16 +87,27 @@ test("the catalogue publishes only sellable POS products, with POS photos", asyn
   assert.equal(headers.get("access-control-allow-origin"), "https://furfoopet.com");
 
   const skus = body.products.map((product) => product.sku);
-  assert.deepEqual(skus.sort(), ["FF-HB-ZEN-CALM-25", "FF-TRT-BEEF-CHIP-50"]);
+  assert.deepEqual(skus.sort(), ["FF-HB-ZEN-CALM-25", "FF-SP-AC-100", "FF-TRT-BEEF-CHIP-50", "FF-TRT-DUCK-JERKY"]);
 
   const chips = body.products.find((product) => product.sku === "FF-TRT-BEEF-CHIP-50");
   assert.equal(chips.price, 19);
   assert.equal(chips.stockQty, 5);
   assert.equal(chips.inStock, true);
   assert.equal(chips.lowStock, true);
-  assert.equal(chips.categoryLabel, "Handmade Pet Treats");
+  assert.equal(chips.categoryLabel, "Handmade Treats");
+  // The POS notes field is written for the shop, not for a customer.
+  assert.equal(chips.notes, undefined);
+  assert.ok(!JSON.stringify(chips).includes("missing MYR"), "staff notes must not reach the browser");
   // A POS upload is a relative path; the shop needs an absolute one.
   assert.equal(chips.image, `${pos.baseUrl}/uploads/products/beef-chips.jpg`);
+
+  // A short code and its long form are one category, named the way the POS
+  // names it - not "Trt" and "Sp".
+  const jerky = body.products.find((product) => product.sku === "FF-TRT-DUCK-JERKY");
+  assert.equal(jerky.category, chips.category, "trt and handmade_pet_treats are the same shelf");
+  assert.equal(jerky.categoryLabel, "Handmade Treats");
+  const spray = body.products.find((product) => product.sku === "FF-SP-AC-100");
+  assert.equal(spray.categoryLabel, "Spray");
 
   const bath = body.products.find((product) => product.sku === "FF-HB-ZEN-CALM-25");
   assert.equal(bath.inStock, false);

@@ -10,6 +10,9 @@
  * slug, then the product name. Fill in `sku` for a reliable match — it is the
  * only field that survives a product being renamed in the POS.
  *
+ * The category always comes from the POS, even when an entry below names one:
+ * that name is only used when the site runs without the storefront API.
+ *
  * A POS product with no entry here still appears in the shop, using the POS
  * name, category and photo. An entry here with no POS product does not: the POS
  * decides what is for sale. The whole list is also the fallback catalogue when
@@ -20,9 +23,9 @@
 export const productEditorial = [
   {
     id: 'salmon-chicken-strips',
-    sku: '',
+    sku: 'FF-TRT-SALMON-CHICKEN-STRIP',
     name: 'Salmon & Chicken Strips',
-    price: 18.9,
+    price: 21.9,
     image: '/media/products/salmon-chicken.jpg',
     category: 'Natural Treats',
     note: 'A savoury, protein-rich chew for coat glow and daily energy.',
@@ -32,9 +35,9 @@ export const productEditorial = [
   },
   {
     id: 'duck-salmon-roll',
-    sku: '',
+    sku: 'FF-TRT-DUCK-SALMON-ROLL-50',
     name: 'Duck & Salmon Skin Roll',
-    price: 19.9,
+    price: 23.9,
     image: '/media/products/duck-salmon-roll.jpg',
     category: 'Functional Treats',
     note: 'A satisfying double-texture roll that supports skin and dental care.',
@@ -44,9 +47,9 @@ export const productEditorial = [
   },
   {
     id: 'greens-biscuits',
-    sku: '',
+    sku: 'FF-TRT-CHICKEN-GREENS-BISCUIT',
     name: 'Chicken & Greens Biscuits',
-    price: 16.9,
+    price: 19.9,
     image: '/media/products/greens-biscuits.jpg',
     category: 'Functional Treats',
     note: 'A fibre-forward crunchy bite for happy tummies and clean teeth.',
@@ -56,9 +59,12 @@ export const productEditorial = [
   },
   {
     id: 'wholesome-crispy-bites',
-    sku: '',
+    // Guessed from the name and the ingredient line — confirm this is the SKU
+    // the shop means before relying on it. A wrong SKU only costs this copy:
+    // the product still appears with its POS name and photo.
+    sku: 'FF-TRT-CRUNCH-CHIPS',
     name: 'Wholesome Crispy Bites',
-    price: 17.9,
+    price: 22.9,
     image: '/media/products/wholesome-chips.jpg',
     category: 'Natural Treats',
     note: 'Four colourful flavours, air-dried into a light rewarding crunch.',

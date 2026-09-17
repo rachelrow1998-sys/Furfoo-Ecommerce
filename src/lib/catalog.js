@@ -65,8 +65,10 @@ export function mergeCatalog(liveProducts, entries = productEditorial) {
       priceCents: product.priceCents,
       currency: product.currency,
       image: product.image || copy?.image || FALLBACK_IMAGE,
-      category: copy?.category || product.categoryLabel || 'Furfoo',
-      note: copy?.note || product.notes || `${product.name}, made in small batches by Furfoo.`,
+      // The POS owns the category, so one shelf per POS category whatever the
+      // editorial entry calls it. The entry's own category is for fallback mode.
+      category: product.categoryLabel || copy?.category || 'Furfoo',
+      note: copy?.note || `${product.name}, made in small batches by Furfoo.`,
       tags: copy?.tags || [],
       ingredients: copy?.ingredients || '',
       color: copy?.color || FALLBACK_ACCENT,
