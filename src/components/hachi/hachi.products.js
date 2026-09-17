@@ -1,4 +1,4 @@
-import { products as storefrontProducts } from '../../data/products'
+import { products as fallbackProducts } from '../../data/products'
 
 const bathProducts = [
   { id: 'itch-off', name: 'Itch-Off', category: 'bath', petType: ['dog', 'cat'], concerns: ['itchy', 'red-spots'], image: '/media/products/all-in-one.jpg', url: '/shop', available: true, description: 'A gentle herbal bath blend for irritated or sensitive skin.', suitedFor: 'Itchy, irritated, or sensitive skin' },
@@ -18,15 +18,32 @@ const treatKnowledge = {
   'wholesome-crispy-bites': { petType: ['dog', 'cat'], flavours: ['beef', 'lamb', 'ostrich'], texture: ['light', 'crunchy'], goals: ['training', 'everyday'], allergens: ['beef', 'lamb', 'ostrich'], url: '/products/wholesome-crispy-bites', available: true },
 }
 
-const treatProducts = storefrontProducts.map(product => ({
-  ...product,
-  ...treatKnowledge[product.id],
-  category: 'treat',
-  description: product.note,
-  suitedFor: product.tags.join(', '),
-}))
+/**
+ * Hachi recommends from the live shelf.
+ *
+ * The facts - price, photo, and whether it is in stock right now - come from
+ * the catalogue the POS serves. Only products with a knowledge entry above take
+ * part: the recommender filters on allergens, and a product whose ingredients
+ * Hachi has not been told about cannot be filtered safely.
+ */
+export function buildTreatProducts(catalogProducts = fallbackProducts) {
+  return catalogProducts
+    .filter(product => treatKnowledge[product.id])
+    .map(product => ({
+      ...product,
+      ...treatKnowledge[product.id],
+      category: 'treat',
+      description: product.note,
+      suitedFor: (product.tags || []).join(', '),
+      // Stock is the POS's answer when the shop is connected, and the
+      // knowledge entry's static flag only when it is not.
+      available: typeof product.stockQty === 'number' ? product.inStock : treatKnowledge[product.id].available,
+    }))
+}
 
-export const hachiProducts = [...bathProducts, ...treatProducts]
+const fallbackTreatProducts = buildTreatProducts(fallbackProducts)
+
+export const hachiProducts = [...bathProducts, ...fallbackTreatProducts]
 
 const labels = {
   crunchy: 'crunchy texture', chewy: 'chewy texture', light: 'light and crispy texture',
@@ -36,7 +53,7 @@ const labels = {
   digestion: 'digestion', training: 'training rewards', everyday: 'everyday treating',
 }
 
-export function recommendTreat({ petType, texture, flavour, avoid, goal }) {
+export function recommendTreat({ petType, texture, flavour, avoid, goal }, treatProducts = fallbackTreatProducts) {
   const eligible = treatProducts.filter(product => {
     if (!product.available || !product.petType.includes(petType)) return false
     if (avoid && !['none', 'other'].includes(avoid) && product.allergens.includes(avoid)) return false

@@ -34,6 +34,11 @@ jobs:
       - run: npm ci
 
       - name: Build
+        # Set the repository variable VITE_STOREFRONT_API to the storefront API's
+        # public URL. Left unset, the site builds against the local catalogue in
+        # src/data/products.js and keeps the WhatsApp handoff.
+        env:
+          VITE_STOREFRONT_API: ${{ vars.VITE_STOREFRONT_API }}
         run: npm run build -- --base=${{ steps.pages.outputs.base_path }}/
 
       - name: Rewrite absolute public-asset paths for the sub-path deploy

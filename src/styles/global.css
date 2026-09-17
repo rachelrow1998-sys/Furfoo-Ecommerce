@@ -1031,3 +1031,85 @@ body::before { opacity: .055; }
   .category-panel-story,
   .home-page .category-panel-story { --category-panel-height: 320px; }
 }
+
+/* ---------------------------------------------------------------------------
+   Live stock, checkout and order status.
+   Stock comes from the POS, so a card, a bag line and a product page can all
+   say "sold out" or "only two left". These styles carry that state and the two
+   pages the POS link adds: checkout and the order receipt.
+   ------------------------------------------------------------------------ */
+
+/* The home page reels follow the POS's categories, so the row draws as many
+   columns as there are shelves instead of a fixed four. */
+.featured .product-grid { grid-template-columns: repeat(var(--reel-count, 4), minmax(0, 1fr)); }
+
+.stock-pill { position: absolute; left: 14px; bottom: 14px; z-index: 2; font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.92); color: var(--furfoo-text); box-shadow: 0 6px 18px rgba(64,43,34,.14); }
+.stock-pill--low { background: var(--furfoo-red); color: var(--furfoo-white); }
+.stock-pill--out { background: rgba(42,33,30,.82); color: var(--furfoo-white); }
+.product-card.is-sold-out .product-visual img { filter: grayscale(.55); opacity: .72; }
+.product-card .circle-link.add:disabled { opacity: .4; pointer-events: none; }
+
+.product-grid--loading { pointer-events: none; }
+.product-skeleton { min-height: 420px; border-radius: 32px; border: 1px solid rgba(52,37,31,.08); background: linear-gradient(100deg, rgba(255,255,255,.35) 30%, rgba(255,255,255,.75) 50%, rgba(255,255,255,.35) 70%); background-size: 240% 100%; animation: furfoo-shimmer 1.6s ease-in-out infinite; }
+@keyframes furfoo-shimmer { from { background-position: 180% 0; } to { background-position: -40% 0; } }
+
+.catalog-note { color: var(--muted); font-size: 14px; padding: 8px 0 24px; }
+
+.stock-line { font-size: 14px; font-weight: 600; margin: 4px 0 14px; }
+.stock-line--in { color: var(--muted); }
+.stock-line--low, .stock-line--out { color: var(--furfoo-red); }
+
+.cart-notice { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; background: rgba(186,32,37,.08); color: var(--furfoo-red); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 14px; margin: 0 0 8px; }
+.cart-notice button { background: none; border: 0; color: inherit; font-size: 18px; line-height: 1; padding: 0 2px; }
+.cart-stock-note, .cart-shipping-note { color: var(--muted); font-size: 12px; }
+.cart-shipping-note { text-align: center; }
+.quantity button:disabled { opacity: .35; pointer-events: none; }
+
+.checkout-page, .order-page { max-width: var(--max); margin: auto; padding: clamp(96px, 12vw, 148px) var(--pad) clamp(60px, 8vw, 110px); }
+.checkout-head { margin-bottom: clamp(28px, 4vw, 48px); }
+.checkout-head h1 { font-size: clamp(38px, 4.6vw, 64px); }
+.checkout-empty { text-align: center; padding: clamp(40px, 8vw, 90px) 0; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+
+.checkout-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(28px, 5vw, 72px); align-items: start; }
+.checkout-form { display: flex; flex-direction: column; gap: 18px; }
+.checkout-form label { display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.checkout-form label em { font-style: normal; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--muted); }
+.checkout-form input, .checkout-form textarea { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; background: rgba(255,255,255,.7); font-family: var(--font-body); font-size: 16px; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--furfoo-text); }
+.checkout-form input:focus, .checkout-form textarea:focus { outline: 2px solid var(--furfoo-red); outline-offset: 1px; }
+.checkout-form textarea { resize: vertical; }
+.checkout-form .button { justify-content: center; }
+
+.checkout-error { background: rgba(186,32,37,.08); color: var(--furfoo-red); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 14px; }
+.checkout-error ul { margin: 8px 0 0; padding-left: 18px; }
+
+.checkout-summary { background: rgba(255,255,255,.6); border: 1px solid rgba(52,37,31,.08); border-radius: var(--radius-md); padding: clamp(20px, 3vw, 32px); position: sticky; top: 110px; }
+.checkout-summary h2 { font-size: 26px; margin-bottom: 18px; }
+.checkout-line, .order-line { display: grid; grid-template-columns: 62px 1fr auto; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.checkout-line img, .order-line img { width: 62px; height: 70px; object-fit: cover; border-radius: 12px; }
+.checkout-line small, .order-line small { display: block; color: var(--muted); font-size: 13px; }
+
+.checkout-totals { margin: 18px 0 0; border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.checkout-totals > div { display: flex; justify-content: space-between; font-size: 15px; }
+.checkout-totals dt, .checkout-totals dd { margin: 0; }
+.checkout-grand { font-size: 20px; font-weight: 700; border-top: 1px solid var(--line); padding-top: 12px; }
+
+.order-page { max-width: 780px; text-align: center; }
+.order-status { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.order-status svg { width: 46px; height: 46px; }
+.order-status--good svg { color: #2f7a4f; }
+.order-status--pending svg { color: var(--furfoo-red); }
+.order-status--ended svg { color: var(--muted); }
+.order-reference { color: var(--muted); }
+.order-reference strong { color: var(--furfoo-text); letter-spacing: .06em; }
+.order-instructions { background: rgba(255,255,255,.65); border: 1px solid rgba(52,37,31,.08); border-radius: var(--radius-md); padding: clamp(20px, 3vw, 30px); margin: 28px 0; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.order-instructions p { white-space: pre-line; margin: 0; color: var(--furfoo-text); }
+.order-note { color: var(--muted); }
+.order-lines { text-align: left; margin: 32px 0; }
+
+.spin { animation: furfoo-spin 1s linear infinite; }
+@keyframes furfoo-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+  .checkout-grid { grid-template-columns: 1fr; }
+  .checkout-summary { position: static; order: -1; }
+}

@@ -1,7 +1,8 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, ChevronUp, CircleArrowDown } from 'lucide-react'
 import gsap from 'gsap'
-import { products } from '../data/products'
+import { useCatalog } from '../store/CatalogContext'
+import { buildShelves } from '../lib/catalog'
 import ProductCard from './ProductCard'
 import Button from './Button'
 import SectionReveal from './SectionReveal'
@@ -25,13 +26,6 @@ function primeAudio(audio) {
     audio.muted = false
   }).catch(() => { audio.muted = false })
 }
-
-const shelves = [
-  { category: 'Natural Treats', products: products.filter(product => product.category === 'Natural Treats') },
-  { category: 'Functional Treats', products: products.filter(product => product.category === 'Functional Treats') },
-  { category: 'Dental Care', products: products.filter(product => product.tags.includes('Dental care')) },
-  { category: 'Daily Rewards', products: products.filter(product => product.tags.some(tag => ['Daily energy', 'Training'].includes(tag))) },
-]
 
 const ProductReel = forwardRef(function ProductReel({ category, products: reelProducts, isSpinning, onManualInteraction }, ref) {
   const viewportRef = useRef(null)
@@ -162,6 +156,10 @@ function SpinButton({ onClick, disabled, isPulling }) {
 }
 
 export default function FeaturedProducts() {
+  // The shelves follow the POS: its product categories decide what the reels
+  // hold, so a new category in the shop appears here without a code change.
+  const { products } = useCatalog()
+  const shelves = useMemo(() => buildShelves(products), [products])
   const reelRefs = useRef([])
   const autoTimerRef = useRef(null)
   const resumeTimerRef = useRef(null)
@@ -220,7 +218,7 @@ export default function FeaturedProducts() {
   }, [clearAutoTimer])
 
   const spin = async () => {
-    if (isSpinning) return
+    if (isSpinning || !shelves.length) return
     clearAutoTimer()
     isSpinningRef.current = true
     setIsSpinning(true)
@@ -234,7 +232,7 @@ export default function FeaturedProducts() {
     }
     const targets = shelves.map(shelf => Math.floor(Math.random() * shelf.products.length))
 
-    await Promise.all(reelRefs.current.map((reel, index) => reel?.spinTo(targets[index], index, reducedMotion)))
+    await Promise.all(reelRefs.current.slice(0, shelves.length).map((reel, index) => reel?.spinTo(targets[index], index, reducedMotion)))
     stopSiteSound(wheelAudioRef.current)
     restartAudio(winAudioRef.current)
     isSpinningRef.current = false
@@ -262,7 +260,9 @@ export default function FeaturedProducts() {
           <SectionReveal>The treat shelf.</SectionReveal>
           <div className="featured-actions"><Button to="/shop" variant="outline">View all products</Button></div>
         </header>
-        <div className="product-grid" aria-busy={isSpinning}>
+        {/* The POS decides how many categories there are, so the reel row is
+            told how many columns to draw rather than assuming four. */}
+        <div className="product-grid" style={{ '--reel-count': shelves.length || 1 }} aria-busy={isSpinning}>
           {shelves.map((shelf, index) => <ProductReel
             key={shelf.category}
             ref={node => { reelRefs.current[index] = node }}
@@ -272,7 +272,7 @@ export default function FeaturedProducts() {
             onManualInteraction={pauseAutoForManualControl}
           />)}
         </div>
-        <div className="shelf-spin-zone"><SpinButton onClick={spin} disabled={isSpinning} isPulling={isPulling}/></div>
+        {shelves.length > 1 && <div className="shelf-spin-zone"><SpinButton onClick={spin} disabled={isSpinning} isPulling={isPulling}/></div>}
       </div>
     </section>
   </div>

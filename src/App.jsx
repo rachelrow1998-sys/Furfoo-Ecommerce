@@ -5,6 +5,8 @@ import CartDrawer from './components/CartDrawer'
 import Home from './pages/Home'
 import Shop from './pages/Shop'
 import ProductDetail from './pages/ProductDetail'
+import Checkout from './pages/Checkout'
+import OrderStatus from './pages/OrderStatus'
 import MembersLogin from './pages/MembersLogin'
 import HachiWorld from './components/hachi/HachiWorld'
 import { playSiteSound, stopSiteSound, subscribeSiteSound } from './utils/siteSound'
@@ -57,5 +59,5 @@ export default function App() {
     }
   }, [])
 
-  return <><ScrollManager/><Navbar/><CartDrawer/><Routes><Route path="/" element={<Home/>}/><Route path="/shop" element={<Shop/>}/><Route path="/products/:id" element={<ProductDetail/>}/><Route path="/members" element={<MembersLogin/>}/></Routes><HachiWorld/></>
+  return <><ScrollManager/><Navbar/><CartDrawer/><Routes><Route path="/" element={<Home/>}/><Route path="/shop" element={<Shop/>}/><Route path="/products/:id" element={<ProductDetail/>}/><Route path="/checkout" element={<Checkout/>}/><Route path="/order/:id" element={<OrderStatus/>}/><Route path="/members" element={<MembersLogin/>}/></Routes><HachiWorld/></>
 }

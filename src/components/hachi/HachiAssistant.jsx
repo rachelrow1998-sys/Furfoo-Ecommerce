@@ -9,7 +9,8 @@ import {
   Volume2, VolumeX, X, Moon, GripHorizontal,
 } from 'lucide-react'
 import { hachiConfig } from './hachi.config'
-import { hachiProducts, recommendBath, recommendTreat } from './hachi.products'
+import { buildTreatProducts, recommendBath, recommendTreat } from './hachi.products'
+import { useCatalog } from '../../store/CatalogContext'
 import { hachiFaqs } from './hachi.faqs'
 import { hachiAdoptions } from './hachi.adoptions'
 import { hasUrgentHealthTerms, sendMessageToHachi, trackHachiEvent, whatsappUrl } from './hachi.utils'
@@ -171,8 +172,10 @@ function SafetyNotice() {
 }
 
 function HachiContent({ screen, setScreen, bathAnswers, setBathAnswers, treatAnswers, setTreatAnswers, selectedFaq, setSelectedFaq, selectedPet, setSelectedPet, navigateToProduct }) {
+  const { products: catalogProducts } = useCatalog()
+  const treatProducts = useMemo(() => buildTreatProducts(catalogProducts), [catalogProducts])
   const bathResults = useMemo(() => recommendBath(bathAnswers.concern), [bathAnswers.concern])
-  const treatResults = useMemo(() => recommendTreat(treatAnswers), [treatAnswers])
+  const treatResults = useMemo(() => recommendTreat(treatAnswers, treatProducts), [treatAnswers, treatProducts])
   useEffect(() => {
     if (screen === 'bath-result' && bathResults.length) trackHachiEvent('hachi_product_recommended', { productIds: bathResults.map(product => product.id) })
     if (screen === 'treat-result' && treatResults.length) trackHachiEvent('hachi_product_recommended', { productIds: treatResults.map(product => product.id) })
