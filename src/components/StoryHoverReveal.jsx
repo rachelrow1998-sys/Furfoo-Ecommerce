@@ -47,9 +47,26 @@ const TRAIL_FULL = 9
 const TRAIL_RISE = 0.5
 const TRAIL_FALL = 0.07
 const SETTLED_HEAT = 0.004
-// Stroke width at the head, as a share of the mask's diameter, tapering to a
-// point at the tail.
-const TRAIL_WIDTH = 0.27
+// The wake is not one ribbon but a bundle of filaments woven down the same
+// path, which is what reads as liquid rather than as a drawn shape. Each one
+// weaves across the path on its own phase, so they cross and braid.
+const TRAIL_STRANDS = 7
+// Width of a filament and how far one can swing off the path, both as shares of
+// the head's thickness.
+const TRAIL_WIDTH = 0.08
+const TRAIL_SPREAD = 0.62
+// Waves a filament makes over the whole tail. Each one is detuned off this and
+// carries its own width: filaments that share a frequency stay parallel, and a
+// bundle of parallel wires of equal gauge reads as a braid, not as liquid.
+const TRAIL_WAVES = 1.7
+const TRAIL_DETUNE = 0.75
+const TRAIL_GAUGE = 0.95
+// Each filament is stroked in this many pieces. One stroke per filament is
+// cheapest but flattens the colour ramp along its length; per step keeps the
+// ramp and costs an order of magnitude more strokes. A handful does both.
+const TRAIL_CHUNKS = 6
+// The bundle gathers at the head and opens out over this much of the tail.
+const TRAIL_GATHER = 0.3
 const TRAIL_TAPER = 1
 // Brand red, run hot at the head and deep at the tail, so the wake carries a
 // gradient down its length instead of one flat colour. The head is the light
@@ -57,11 +74,11 @@ const TRAIL_TAPER = 1
 const TRAIL_HEAD = [255, 140, 96]
 const TRAIL_MID = [216, 42, 46]
 const TRAIL_TAIL = [124, 12, 28]
-const TRAIL_CORE_ALPHA = 0.9
-// A wider, fainter pass under the core, which is what gives it a glow rather
-// than a hard edge.
-const TRAIL_GLOW_ALPHA = 0.26
-const TRAIL_GLOW_WIDTH = 1.9
+const TRAIL_CORE_ALPHA = 0.95
+// A wider, fainter pass under the filaments, which is what makes them glow
+// through each other instead of reading as separate wires.
+const TRAIL_GLOW_ALPHA = 0.16
+const TRAIL_GLOW_WIDTH = 3.2
 // The ring around the head, as multiples of its radius: clear through the
 // middle so the revealed cat is never tinted, rising to a band that sits just
 // outside the reveal's soft edge, then out to nothing.
@@ -73,6 +90,13 @@ const HALO_ALPHA = 0.8
 const MAX_DPR = 2
 
 const TAU = Math.PI * 2
+
+// Deterministic per-filament scatter, so the bundle is uneven but the same on
+// every frame and every load.
+const scatter = (n) => {
+  const v = Math.sin(n * 12.9898) * 43758.5453
+  return v - Math.floor(v)
+}
 
 const mix = (from, to, t) => from.map((channel, i) => Math.round(channel + (to[i] - channel) * t))
 
@@ -287,6 +311,65 @@ export default function StoryHoverReveal({
     // off distance along the path, which keeps the ramp even whatever the
     // spacing of the underlying points.
     //
+    // One filament: the travelled path pushed sideways by a wave of its own, cut
+    // short at its own reach. The offset is taken along the path's normal, so a
+    // filament follows the curve of the sweep rather than sliding off it.
+    // Reused between filaments; holds x, y, t triples.
+    const strand = new Float32Array(TRAIL_MAX_POINTS * 3)
+    let strandPoints = 0
+
+    const traceStrand = (total, { phase, swing, reach, waves }) => {
+      strandPoints = 0
+
+      for (let i = 0; i < pathPoints - 1; i++) {
+        const t = path[i * 3 + 2] / total
+        if (t > reach) break
+
+        const x = path[i * 3]
+        const y = path[i * 3 + 1]
+        const nextX = path[(i + 1) * 3]
+        const nextY = path[(i + 1) * 3 + 1]
+        const run = Math.hypot(nextX - x, nextY - y) || 1
+        // Normal to the path here, so a filament follows the curve of the sweep
+        // rather than sliding off it.
+        const nx = -(nextY - y) / run
+        const ny = (nextX - x) / run
+
+        const gather = Math.min(1, t / TRAIL_GATHER)
+        const offset = swing * state.head * gather * Math.sin(t * waves * TAU + phase)
+        strand[strandPoints * 3] = x + nx * offset
+        strand[strandPoints * 3 + 1] = y + ny * offset
+        strand[strandPoints * 3 + 2] = t
+        strandPoints++
+      }
+    }
+
+    // One filament: the travelled path pushed sideways by a wave of its own, cut
+    // short at its own reach, laid down in a few pieces so the colour can move
+    // along it.
+    const paintStrand = (total, spec, pass) => {
+      traceStrand(total, spec)
+      if (strandPoints < 2) return
+
+      const span = Math.max(1, Math.ceil((strandPoints - 1) / TRAIL_CHUNKS))
+      for (let from = 0; from < strandPoints - 1; from += span) {
+        const to = Math.min(strandPoints - 1, from + span)
+        const t = (strand[from * 3 + 2] + strand[to * 3 + 2]) / 2
+        const taper = Math.pow(1 - t, TRAIL_TAPER)
+        const width = state.head * TRAIL_WIDTH * spec.gauge * taper * pass.width
+        if (width < 0.35) continue
+
+        context.beginPath()
+        context.moveTo(strand[from * 3], strand[from * 3 + 1])
+        for (let i = from + 1; i <= to; i++) {
+          context.lineTo(strand[i * 3], strand[i * 3 + 1])
+        }
+        context.lineWidth = width
+        context.strokeStyle = trailColor(t, pass.alpha * taper * state.heat)
+        context.stroke()
+      }
+    }
+
     // The ring belongs to the reveal and the tail to the motion, so the canvas
     // carries only the open/close fade and the tail's own alpha carries the
     // speed — otherwise the ring would blink out whenever the cursor rested.
@@ -304,18 +387,18 @@ export default function StoryHoverReveal({
           { width: TRAIL_GLOW_WIDTH, alpha: TRAIL_GLOW_ALPHA },
           { width: 1, alpha: TRAIL_CORE_ALPHA },
         ]) {
-          for (let i = 0; i < pathPoints - 1; i++) {
-            const t = path[i * 3 + 2] / total
-            const taper = Math.pow(1 - t, TRAIL_TAPER)
-            const width = state.head * TRAIL_WIDTH * taper * pass.width
-            if (width < 0.4) continue
-
-            context.beginPath()
-            context.moveTo(path[i * 3], path[i * 3 + 1])
-            context.lineTo(path[(i + 1) * 3], path[(i + 1) * 3 + 1])
-            context.lineWidth = width
-            context.strokeStyle = trailColor(t, pass.alpha * taper * state.heat)
-            context.stroke()
+          for (let n = 0; n < TRAIL_STRANDS; n++) {
+            paintStrand(total, {
+              // Golden-angle phases spread the filaments round the bundle
+              // rather than letting them fall into step with each other.
+              phase: n * 2.39996,
+              swing: TRAIL_SPREAD * (0.25 + 0.75 * scatter(n + 1)),
+              // Filaments end at different distances, so the bundle frays out
+              // instead of stopping in one line.
+              reach: 0.55 + 0.45 * scatter(n + 7.3),
+              waves: TRAIL_WAVES * (1 - TRAIL_DETUNE / 2 + TRAIL_DETUNE * scatter(n + 3.1)),
+              gauge: 1 - TRAIL_GAUGE / 2 + TRAIL_GAUGE * scatter(n + 11.7),
+            }, pass)
           }
         }
       }
