@@ -1,21 +1,51 @@
 import { Menu, ShoppingBag, UserRound, X } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { useCart } from '../store/CartContext'
 import GlassSurface from './GlassSurface'
 import PillNav from './PillNav'
 import { scrollToTarget } from '../utils/smoothScroll'
+import { socials, WHATSAPP_URL } from '../data/socials'
 
-const links = [
-  { label: 'Home', href: '/#home' },
-  { label: 'Our Story', href: '/#story' },
-  { label: 'Products', href: '/#products' },
-  { label: 'Reviews', href: '/#reviews' },
-  { label: 'Adoption', href: '/#adoption' },
-  { label: 'FAQ', href: '/#faq' },
-  { label: 'Shop', href: '/shop' },
+// The mobile menu is grouped by what a tap actually does: scroll this page,
+// go shopping, or reach an account/person. `mobileOnly` entries stay out of the
+// desktop pill row, which keeps its original seven links.
+const navGroups = [
+  {
+    id: 'explore',
+    label: 'Explore',
+    items: [
+      { label: 'Home', href: '/#home' },
+      { label: 'Our Story', href: '/#story' },
+      { label: 'Products', href: '/#products' },
+      { label: 'Reviews', href: '/#reviews' },
+      { label: 'Adoption', href: '/#adoption' },
+      { label: 'FAQ', href: '/#faq' },
+    ],
+  },
+  {
+    id: 'shop',
+    label: 'Shop',
+    items: [
+      { label: 'Shop', href: '/shop' },
+      { label: 'Treat Shelf', href: '/#treat-shelf', mobileOnly: true },
+      { label: 'Cart', action: 'cart', mobileOnly: true },
+    ],
+  },
+  {
+    id: 'account',
+    label: 'Account & Contact',
+    mobileOnly: true,
+    items: [
+      { label: 'Members Login', href: '/members' },
+      { label: 'WhatsApp', href: WHATSAPP_URL, external: true },
+    ],
+  },
 ]
+
+const links = navGroups.flatMap(group =>
+  group.mobileOnly ? [] : group.items.filter(item => !item.mobileOnly))
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
@@ -74,9 +104,22 @@ export default function Navbar() {
         ? `/${location.hash || '#home'}`
         : location.pathname
 
+  // The cart lives in the menu too, so it carries the live count with it.
+  const mobileGroups = useMemo(() => navGroups.map(group => ({
+    ...group,
+    items: group.items.map(item => item.action === 'cart' ? { ...item, badge: count } : item),
+  })), [count])
+
   const handleNavigate = (item, event) => {
     setMobile(false)
-    if (!item.href.startsWith('/#')) return
+
+    if (item.action === 'cart') {
+      event.preventDefault()
+      setOpen(true)
+      return
+    }
+
+    if (item.external || !item.href.startsWith('/#')) return
 
     event.preventDefault()
     const hash = item.href.slice(1)
@@ -113,7 +156,7 @@ export default function Navbar() {
     <Link className="wordmark" to="/" aria-label="Furfoo home">
       <img src="/media/brand/homee-toggle-logo.png" alt="Furfoo — Where fur meets fortune" />
     </Link>
-    <PillNav items={links} activeHref={activeHref} mobileOpen={mobile} onNavigate={handleNavigate} />
+    <PillNav items={links} groups={mobileGroups} socials={socials} activeHref={activeHref} mobileOpen={mobile} onNavigate={handleNavigate} />
     <div className="nav-actions">
       <Link
         className={`icon-button nav-action-button member-login-button${location.pathname === '/members' ? ' is-active' : ''}`}

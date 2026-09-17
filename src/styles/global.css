@@ -542,6 +542,8 @@ h2 em, h1 em { color: inherit; font-style: normal; }
   :root { --pad: 22px; }
   .navbar { width: calc(100% - 20px); height: 64px; top: 8px; }
   .menu-button { display: grid; }
+  /* Members login moves into the menu's Account group; the cart icon stays put. */
+  .member-login-button { display: none; }
   .hero { min-height: auto; grid-template-columns: 1fr; padding: 120px var(--pad) 70px; }
   .hero-copy { text-align: center; margin: auto; }
   .hero-copy .eyebrow, .hero-actions, .hero-proof { justify-content: center; }

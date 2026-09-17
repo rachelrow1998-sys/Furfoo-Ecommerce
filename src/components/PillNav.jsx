@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import './PillNav.css'
 
-export default function PillNav({ items, activeHref, mobileOpen, onNavigate }) {
+export default function PillNav({ items, groups = [], socials = [], activeHref, mobileOpen, onNavigate }) {
   const pillsRef = useRef([])
 
   useLayoutEffect(() => {
@@ -53,32 +53,46 @@ export default function PillNav({ items, activeHref, mobileOpen, onNavigate }) {
     })
   }
 
-  const renderItem = (item, index, mobile = false) => {
+  const renderPill = (item, index) => {
     const active = activeHref === item.href
-    const className = mobile
-      ? `pill-nav__mobile-link${active ? ' is-active' : ''}`
-      : `pill-nav__pill${active ? ' is-active' : ''}`
-    const content = mobile ? item.label : <>
+    const shared = {
+      className: `pill-nav__pill${active ? ' is-active' : ''}`,
+      'aria-current': active ? 'page' : undefined,
+      onClick: (event) => onNavigate?.(item, event),
+      ref: (element) => { pillsRef.current[index] = element },
+      onMouseEnter: () => animateTo(index, 1),
+      onMouseLeave: () => animateTo(index, 0),
+      onFocus: () => animateTo(index, 1),
+      onBlur: () => animateTo(index, 0),
+    }
+    const content = <>
       <span className="pill-nav__circle" aria-hidden="true" />
       <span className="pill-nav__label-stack">
         <span className="pill-nav__label">{item.label}</span>
         <span className="pill-nav__label pill-nav__label--hover" aria-hidden="true">{item.label}</span>
       </span>
     </>
-    const shared = {
-      className,
-      'aria-current': active ? 'page' : undefined,
-      onClick: (event) => onNavigate?.(item, event),
-      ...(mobile && { tabIndex: mobileOpen ? 0 : -1 }),
-      ...(!mobile && {
-        ref: (element) => { pillsRef.current[index] = element },
-        onMouseEnter: () => animateTo(index, 1),
-        onMouseLeave: () => animateTo(index, 0),
-        onFocus: () => animateTo(index, 1),
-        onBlur: () => animateTo(index, 0),
-      }),
-    }
 
+    return item.href.startsWith('/#')
+      ? <a href={item.href} {...shared}>{content}</a>
+      : <Link to={item.href} {...shared}>{content}</Link>
+  }
+
+  const renderMobileLink = (item) => {
+    const active = !item.action && activeHref === item.href
+    const shared = {
+      className: `pill-nav__mobile-link${active ? ' is-active' : ''}`,
+      'aria-current': active ? 'page' : undefined,
+      tabIndex: mobileOpen ? 0 : -1,
+      onClick: (event) => onNavigate?.(item, event),
+    }
+    const content = <>
+      <span>{item.label}</span>
+      {item.badge > 0 && <span className="pill-nav__mobile-badge">{item.badge}</span>}
+    </>
+
+    if (item.action) return <button type="button" {...shared}>{content}</button>
+    if (item.external) return <a href={item.href} target="_blank" rel="noopener noreferrer" {...shared}>{content}</a>
     return item.href.startsWith('/#')
       ? <a href={item.href} {...shared}>{content}</a>
       : <Link to={item.href} {...shared}>{content}</Link>
@@ -87,13 +101,23 @@ export default function PillNav({ items, activeHref, mobileOpen, onNavigate }) {
   return <>
     <nav className="pill-nav" aria-label="Main navigation">
       <ul className="pill-nav__list">
-        {items.map((item, index) => <li key={item.href}>{renderItem(item, index)}</li>)}
+        {items.map((item, index) => <li key={item.href}>{renderPill(item, index)}</li>)}
       </ul>
     </nav>
     <nav id="mobile-navigation" className={`pill-nav-mobile${mobileOpen ? ' is-open' : ''}`} aria-label="Mobile navigation" aria-hidden={!mobileOpen}>
-      <ul>
-        {items.map((item, index) => <li key={item.href}>{renderItem(item, index, true)}</li>)}
-      </ul>
+      {groups.map(group => <section className="pill-nav__mobile-group" key={group.id}>
+        <h2 className="pill-nav__mobile-heading" id={`mobile-nav-${group.id}`}>{group.label}</h2>
+        <ul aria-labelledby={`mobile-nav-${group.id}`}>
+          {group.items.map(item => <li key={item.action ?? item.href}>{renderMobileLink(item)}</li>)}
+        </ul>
+      </section>)}
+      {socials.length > 0 && <ul className="pill-nav__mobile-social">
+        {socials.map(({ label, href, icon: Icon, wordmark }) => <li key={label}>
+          <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} tabIndex={mobileOpen ? 0 : -1}>
+            {Icon ? <Icon/> : <span aria-hidden="true">{wordmark}</span>}
+          </a>
+        </li>)}
+      </ul>}
     </nav>
   </>
 }
