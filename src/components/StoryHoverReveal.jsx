@@ -14,7 +14,7 @@ const LENS_RATIO = 0.1
 // How much longer the head is along the line of travel than across it. A circle
 // meets its tail at the side of a curve, which is the join that reads wrong;
 // stretched, the wake leaves from the narrow trailing end.
-const HEAD_STRETCH = 1.45
+const HEAD_STRETCH = 2.1
 // Below this much travel in a frame the heading is left alone, so the head does
 // not swing on the jitter of an almost-still cursor.
 const HEADING_MIN = 0.5
@@ -33,7 +33,7 @@ const TAP_HOLD = 1100
 const TRAIL_HISTORY = 48
 // Tail length and the floor below which there is nothing worth drawing, both in
 // mask diameters.
-const TRAIL_LENGTH = 2.6
+const TRAIL_LENGTH = 3.1
 const TRAIL_MIN = 0.35
 // The path is redrawn at even steps this far apart rather than at the raw frame
 // positions. A frame's worth of travel is long enough that its round cap shows
@@ -49,7 +49,7 @@ const TRAIL_FALL = 0.07
 const SETTLED_HEAT = 0.004
 // Stroke width at the head, as a share of the mask's diameter, tapering to a
 // point at the tail.
-const TRAIL_WIDTH = 0.4
+const TRAIL_WIDTH = 0.27
 const TRAIL_TAPER = 1
 // Brand red, run hot at the head and deep at the tail, so the wake carries a
 // gradient down its length instead of one flat colour. The head is the light
