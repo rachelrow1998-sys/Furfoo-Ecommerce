@@ -27,27 +27,20 @@
 }
 
 /* The mask. Fixed size and never scaled: it is translated to the pointer, and
-   `mask-size` — driven from the script — is what opens and closes it.
-
-   The mask is just the head: a soft ellipse, stretched along the line of travel
-   and turned to follow it, so the wake leaves from its narrow trailing end
-   rather than off the side of a circle. `ellipse closest-side` takes its two
-   radii from the element's own box, so the one gradient covers both axes and
-   `mask-size` still scales it whole. */
+   `mask-size` — driven from the script — is what opens and closes it. The
+   falloff is a share of the radius, so a smaller mask needs a tighter one to
+   keep a crisp window rather than reading as a smudge. */
 .story-reveal__lens {
   position: absolute;
   top: 0;
   left: 0;
-  width: var(--lens-w, 60%);
-  height: var(--lens-h, 60%);
+  width: var(--lens-size, 60%);
+  height: var(--lens-size, 60%);
   opacity: 0;
   visibility: hidden;
   will-change: transform;
-  /* Load-bearing: the reveal is centred here, so turning about the centre
-     swings the trailing end without moving what is under the cursor. */
-  transform-origin: center;
-  -webkit-mask-image: radial-gradient(ellipse closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
-  mask-image: radial-gradient(ellipse closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
+  mask-image: radial-gradient(circle closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
   /* The mask grows out of the middle of this box, which sits under the pointer. */
   -webkit-mask-position: center;
   mask-position: center;
@@ -59,38 +52,13 @@
 
 .story-reveal.is-active .story-reveal__lens { visibility: visible; }
 
-/* The wake, under the mask so it only shows where it runs past the revealed
-   circle. One canvas stroke rather than a row of dots, which is what keeps it
-   continuous at speed. Painted straight rather than screen-blended: the photo
-   is bright and warm, and light-on-light washed the red out to nothing. */
-.story-reveal__trail {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  will-change: opacity;
-}
-
-/* The wake is pure motion, so it goes rather than being slowed down. */
-@media (prefers-reduced-motion: reduce) {
-  .story-reveal__trail { display: none; }
-}
-
-
-/* Carries the exact inverse of the mask's transform, which is what keeps the
-   cat lined up with the dog underneath it. Its box is the frame, not the mask,
-   so the origin has to be named: it must be the same point the mask turns
-   about, or the rotations cancel around different centres and the photo slides.
-
-   No `will-change` here on purpose. Promoting this to its own layer would have
-   it rasterised under its own rotation and then rotated again by the mask's
-   layer, resampling the photo twice; left alone the two transforms compose into
-   one matrix, which for equal and opposite rotations is the identity. */
+/* Carries the opposite translation to the mask, which is what keeps the cat
+   lined up with the dog underneath it. Its box is the frame, not the mask. */
 .story-reveal__lens-inner {
   position: absolute;
   top: 0;
   left: 0;
   width: var(--frame-w, 100%);
   height: var(--frame-h, 100%);
-  transform-origin: calc(var(--lens-w, 0px) / 2) calc(var(--lens-h, 0px) / 2);
+  will-change: transform;
 }
