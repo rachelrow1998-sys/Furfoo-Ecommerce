@@ -1,13 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { Link } from 'react-router-dom'
+import StoryHoverReveal from './StoryHoverReveal'
 import { getSmoothScroll, onVirtualScroll } from '../utils/smoothScroll'
 import './OurStory.css'
 
-// The lifestyle photo. If the file is ever missing the slot falls back to the
-// placeholder rather than rendering a broken image.
-const STORY_IMAGE = '/media/brand/story-family.jpg'
-const STORY_IMAGE_ALT = 'A Furfoo owner sitting on the floor at home with her dog and cat resting against her.'
+// A matched pair shot on the same set: same room, same framing, same 4:5 crop,
+// only the animal differs. The cat is uncovered under the cursor, so the two
+// have to line up exactly.
+const STORY_IMAGE = '/media/brand/story-harness-dog.webp'
+const STORY_IMAGE_ALT = 'A Shiba Inu sitting on a living room floor in a black Furfoo harness.'
+const STORY_REVEAL_IMAGE = '/media/brand/story-harness-cat.webp'
+const STORY_REVEAL_IMAGE_ALT = 'A tabby cat sitting in the same living room, in the same black Furfoo harness.'
+// If the pair is missing, the slot keeps the older lifestyle photo rather than
+// dropping to the placeholder. That photo is a different scene, so the reveal
+// is switched off with it.
+const STORY_IMAGE_FALLBACK = '/media/brand/story-family.jpg'
+const STORY_IMAGE_FALLBACK_ALT = 'A Furfoo owner sitting on the floor at home with her dog and cat resting against her.'
 
 // The brief's button links to a brand story page. The router has no such route
 // yet (Our Story points back at this section), so the button is left out rather
@@ -17,7 +26,16 @@ const STORY_PAGE = null
 export default function OurStory() {
   const storyRef = useRef(null)
   const [revealed, setRevealed] = useState(false)
+  const [imageSrc, setImageSrc] = useState(STORY_IMAGE)
   const [imageFailed, setImageFailed] = useState(false)
+  const [revealFailed, setRevealFailed] = useState(false)
+
+  const isFallbackImage = imageSrc === STORY_IMAGE_FALLBACK
+
+  const handleImageError = () => {
+    if (isFallbackImage) setImageFailed(true)
+    else setImageSrc(STORY_IMAGE_FALLBACK)
+  }
 
   // Plays once: the observer disconnects on the first intersection.
   useEffect(() => {
@@ -219,8 +237,15 @@ export default function OurStory() {
       </div>
 
       <div className="story-intro__media">
-        {STORY_IMAGE && !imageFailed
-          ? <img src={STORY_IMAGE} alt={STORY_IMAGE_ALT} loading="lazy" onError={() => setImageFailed(true)}/>
+        {imageSrc && !imageFailed
+          ? <StoryHoverReveal
+              baseSrc={imageSrc}
+              baseAlt={isFallbackImage ? STORY_IMAGE_FALLBACK_ALT : STORY_IMAGE_ALT}
+              revealSrc={isFallbackImage || revealFailed ? null : STORY_REVEAL_IMAGE}
+              revealAlt={STORY_REVEAL_IMAGE_ALT}
+              onBaseError={handleImageError}
+              onRevealError={() => setRevealFailed(true)}
+            />
           : <div className="story-intro__placeholder">
               <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="16" rx="3"/>

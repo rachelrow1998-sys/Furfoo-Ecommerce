@@ -1,0 +1,64 @@
+/* Hover-reveal frame. The box itself never moves: it fills whatever slot it is
+   dropped into and both photos are pinned to the same rect. */
+.story-reveal {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  /* The reveal rides the finger, but the page still scrolls through it. */
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* One rule for both layers, so the dog and the cat are cropped identically. */
+.story-reveal__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Both photos are 4:5, the same shape as the slot, so nothing is trimmed.
+     This biases the crop upward, toward the animals' faces, if a differently
+     shaped one is ever swapped in. */
+  object-position: center 42%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* The mask. Fixed size and never scaled: it is translated to the pointer, and
+   `mask-size` — driven from the script — is what opens and closes it. The
+   falloff is a share of the radius, so a smaller mask needs a tighter one to
+   keep a crisp window rather than reading as a smudge. */
+.story-reveal__lens {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--lens-size, 60%);
+  height: var(--lens-size, 60%);
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform;
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
+  mask-image: radial-gradient(circle closest-side, #000 0 68%, rgba(0, 0, 0, .74) 84%, rgba(0, 0, 0, .28) 94%, transparent 100%);
+  /* The mask grows out of the middle of this box, which sits under the pointer. */
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 0 0;
+  mask-size: 0 0;
+}
+
+.story-reveal.is-active .story-reveal__lens { visibility: visible; }
+
+/* Carries the opposite translation to the mask, which is what keeps the cat
+   lined up with the dog underneath it. Its box is the frame, not the mask. */
+.story-reveal__lens-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--frame-w, 100%);
+  height: var(--frame-h, 100%);
+  will-change: transform;
+}
